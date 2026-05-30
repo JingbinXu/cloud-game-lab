@@ -15,6 +15,10 @@ export const useExperienceStore = defineStore('experience', {
     experienceDirection: '',
     /** 当前激活的物品 ID（用于问答面板） */
     activeItemId: null as string | null,
+    /** 当前正在编辑的经验 ID（null 表示新建） */
+    editingExperienceId: null as string | null,
+    /** 已显示的世界观 key 集合 */
+    shownWorldviews: {} as Record<string, boolean>,
   }),
 
   getters: {
@@ -59,6 +63,7 @@ export const useExperienceStore = defineStore('experience', {
       this.currentItemAnswers = {}
       this.currentRoomPlacements = {}
       this.activeItemId = null
+      this.editingExperienceId = null
     },
 
     /** 回答物品的某一道题 */
@@ -82,14 +87,28 @@ export const useExperienceStore = defineStore('experience', {
     /** 完成建造，保存经历 */
     async finalizeExperience(): Promise<CabinExperience> {
       const now = new Date().toISOString()
-      const experience: CabinExperience = {
-        id: uuidv4(),
-        title: this.experienceTitle,
-        direction: this.experienceDirection || undefined,
-        createdAt: now,
-        updatedAt: now,
-        itemAnswers: { ...this.currentItemAnswers },
-        roomPlacements: { ...this.currentRoomPlacements },
+      let experience: CabinExperience
+      if (this.editingExperienceId) {
+        // Update existing
+        experience = {
+          ...this.experiences.find(e => e.id === this.editingExperienceId)!,
+          title: this.experienceTitle,
+          direction: this.experienceDirection || undefined,
+          updatedAt: now,
+          itemAnswers: { ...this.currentItemAnswers },
+          roomPlacements: { ...this.currentRoomPlacements },
+        }
+        await deleteFromStorage(this.editingExperienceId)
+      } else {
+        experience = {
+          id: uuidv4(),
+          title: this.experienceTitle,
+          direction: this.experienceDirection || undefined,
+          createdAt: now,
+          updatedAt: now,
+          itemAnswers: { ...this.currentItemAnswers },
+          roomPlacements: { ...this.currentRoomPlacements },
+        }
       }
       await addExperience(experience)
       await this.loadExperiences()
@@ -101,13 +120,19 @@ export const useExperienceStore = defineStore('experience', {
       await this.loadExperiences()
     },
 
-    /** 从已有经历加载到当前编辑状态 */
+    /** 标记世界观已显示 */
+    markWorldviewShown(key: string) {
+      this.shownWorldviews[key] = true
+    },
+
+    /** 从已有经验加载到当前编辑状态 */
     loadForEdit(exp: CabinExperience) {
       this.experienceTitle = exp.title
       this.experienceDirection = exp.direction || ''
       this.currentItemAnswers = { ...exp.itemAnswers }
       this.currentRoomPlacements = { ...exp.roomPlacements }
       this.activeItemId = null
+      this.editingExperienceId = exp.id
     },
   },
 })

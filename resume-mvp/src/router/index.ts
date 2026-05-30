@@ -9,29 +9,25 @@ const router = createRouter({
       component: () => import('../views/HomeView.vue'),
     },
     {
-      path: '/cabin',
-      name: 'cabin',
-      component: () => import('../views/CabinView.vue'),
+      path: '/street',
+      name: 'street',
+      component: () => import('../views/StreetView.vue'),
     },
     {
-      path: '/questionnaire',
-      redirect: '/cabin',
-    },
-    {
-      path: '/warehouse',
-      name: 'warehouse',
-      component: () => import('../views/BrainMapView.vue'),
-    },
-    {
-      path: '/cabinet',
-      name: 'cabinet',
-      component: () => import('../views/CabinetView.vue'),
-    },
-    {
-      path: '/cabinet/:id',
-      name: 'experience-detail',
-      component: () => import('../views/ExperienceDetailView.vue'),
+      path: '/house/:id',
+      name: 'house',
+      component: () => import('../views/HouseView.vue'),
       props: true,
+    },
+    {
+      path: '/qa',
+      name: 'qa',
+      component: () => import('../views/QAView.vue'),
+    },
+    {
+      path: '/backpack',
+      name: 'backpack',
+      component: () => import('../components/cabin/BackpackView.vue'),
     },
     {
       path: '/resume',
@@ -43,6 +39,21 @@ const router = createRouter({
       name: 'resume-preview',
       component: () => import('../views/ResumePreviewView.vue'),
     },
+    {
+      path: '/warehouse',
+      name: 'warehouse',
+      component: () => import('../views/BrainMapView.vue'),
+    },
+    {
+      path: '/cabinet/:id',
+      name: 'experience-detail',
+      component: () => import('../views/ExperienceDetailView.vue'),
+      props: true,
+    },
+    // Legacy redirects
+    { path: '/cabin', redirect: '/street' },
+    { path: '/questionnaire', redirect: '/street' },
+    { path: '/cabinet', redirect: '/street' },
   ],
 })
 
