@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import type { Experience } from '../types/experience'
+import type { CabinExperience } from '../types/cabin'
+import { ROOM_DEFS, describeItem } from '../types/cabin'
+import { itemDefs, ITEMS_BY_ROOM } from '../data/itemDefs'
 import { getExperienceById, deleteExperience } from '../utils/storage'
 
 const props = defineProps<{
@@ -9,7 +11,7 @@ const props = defineProps<{
 }>()
 
 const router = useRouter()
-const experience = ref<Experience | null>(null)
+const experience = ref<CabinExperience | null>(null)
 
 onMounted(async () => {
   const exp = await getExperienceById(props.id)
@@ -25,10 +27,29 @@ function formatDate(dateStr: string): string {
   return `${date.getFullYear()} 年 ${date.getMonth() + 1} 月 ${date.getDate()} 日`
 }
 
-function getAnswerDisplay(answer: any): string {
-  if (typeof answer.value === 'string') return answer.value
-  if (Array.isArray(answer.value)) return answer.value.join('、')
-  return String(answer.value)
+function getRoomItems(roomId: string) {
+  return ITEMS_BY_ROOM[roomId] || []
+}
+
+function getItemDesc(itemId: string) {
+  const def = itemDefs.find(d => d.id === itemId)
+  if (!def || !experience.value) return ''
+  const answers = experience.value.itemAnswers[itemId]
+  if (!answers) return '（未回答）'
+  const answered = def.questions.some(q => !!answers[q.prop])
+  if (!answered) return '（未回答）'
+  return describeItem(def, answers).desc
+}
+
+function getRoomCompletion(roomId: string) {
+  const items = getRoomItems(roomId)
+  if (!experience.value) return '0/6'
+  const answered = items.filter(item => {
+    const answers = experience.value!.itemAnswers[item.id]
+    if (!answers) return false
+    return item.questions.some(q => !!answers[q.prop])
+  }).length
+  return `${answered}/${items.length}`
 }
 
 async function handleDelete() {
@@ -52,13 +73,16 @@ async function handleDelete() {
         <p class="detail-date">创建于 {{ formatDate(experience.createdAt) }}</p>
       </div>
 
-      <div class="detail-answers">
-        <div
-          v-for="(answer, key) in experience.answers"
-          :key="key"
-          class="answer-item"
-        >
-          <div class="answer-value">{{ getAnswerDisplay(answer) }}</div>
+      <div class="rooms-section" v-for="room in ROOM_DEFS" :key="room.id">
+        <div class="room-header">
+          <span>{{ room.emoji }} {{ room.shortName }}</span>
+          <span class="room-completion">{{ getRoomCompletion(room.id) }}</span>
+        </div>
+        <div class="items-grid">
+          <div v-for="item in getRoomItems(room.id)" :key="item.id" class="item-card">
+            <div class="item-name">{{ item.name }}</div>
+            <div class="item-desc">{{ getItemDesc(item.id) }}</div>
+          </div>
         </div>
       </div>
 
@@ -132,21 +156,49 @@ async function handleDelete() {
   color: var(--bark-light);
 }
 
-.detail-answers {
-  margin-bottom: 32px;
+.rooms-section {
+  margin-bottom: 24px;
 }
 
-.answer-item {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 16px 20px;
+.room-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--bark);
   margin-bottom: 10px;
 }
 
-.answer-value {
-  font-size: 15px;
+.room-completion {
+  font-size: 13px;
+  color: var(--bark-light);
+  font-weight: 500;
+}
+
+.items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.item-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+}
+
+.item-name {
+  font-size: 14px;
+  font-weight: 600;
   color: var(--bark);
+  margin-bottom: 4px;
+}
+
+.item-desc {
+  font-size: 12px;
+  color: var(--bark-light);
   line-height: 1.5;
 }
 
@@ -154,6 +206,7 @@ async function handleDelete() {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+  margin-top: 32px;
 }
 
 .btn-primary {
@@ -208,6 +261,9 @@ async function handleDelete() {
 @media (max-width: 768px) {
   .flow-header {
     padding: 16px 20px;
+  }
+  .items-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

@@ -1,118 +1,113 @@
-import type { Experience } from '../types/experience'
+import type { CabinExperience, RoomId } from '../types/cabin'
+import { describeItem } from '../types/cabin'
+import { itemDefs, ITEMS_BY_ROOM } from '../data/itemDefs'
 
-// 每个选项值 → 简历 bullet 文案
-const BULLET_MAP: Record<string, Record<string, string>> = {
-  q1: {
-    'req-analysis': '独立完成产品需求分析，撰写 PRD 文档',
-    'prototype': '负责产品原型设计与交互方案评审',
-    'data-analysis': '通过数据埋点与效果分析驱动产品决策',
-    'user-research': '主导用户调研与深度访谈，输出洞察报告',
-    'pm-coordination': '负责项目管理与跨团队排期协调',
-  },
-  q2: {
-    'solo': '具备独立负责模块的自驱能力',
-    'design-dev': '与设计、研发团队保持高效日常协作',
-    'cross-dept': '深度参与跨部门协作（运营/市场/数据等）',
-    'lead-cross': '主导跨部门项目，推动多方达成共识',
-  },
-  q3: {
-    'from-zero': '参与从 0 到 1 的新功能/新产品孵化',
-    'optimization': '负责已有产品的体验优化与迭代',
-    'growth-exp': '参与数据驱动的增长实验',
-    'internal-tool': '搭建内部效率工具，提升团队产出',
-    'user-feedback': '基于用户反馈驱动产品体验修复',
-  },
-  q4: {
-    'methodology': '系统掌握产品方法论与思维框架',
-    'cross-team-comm': '显著提升跨团队沟通与推动能力',
-    'tech-understanding': '加深技术理解与工程素养',
-    'biz-sense': '培养商业 sense 与数据敏感度',
-    'execution': '高强度执行下锻炼出的抗压能力',
-  },
-  q5: {
-    'own-launch': '独立主导需求并成功推动上线',
-    'solve-pain': '发现并解决长期存在的用户体验痛点',
-    'data-insight': '通过数据分析发现关键业务洞察',
-    'cross-consensus': '成功推动跨部门达成共识',
-    'recognition': '获得 mentor / leader 的明确认可',
-  },
-  q6: {
-    'breakthrough': '突破舒适圈，主动承担有挑战的任务',
-    'accumulation': '沉淀了一套可复用的工作方法论',
-    'connection': '建立了良好的跨团队协作关系',
-    'creation': '产出了可见的落地成果',
-    'exploration': '在探索中持续成长',
-  },
+/** 房间 ID → 简历维度 key */
+const ROOM_TO_DIM: Record<RoomId, string> = {
+  living: 'collaboration',
+  study: 'professional',
+  kitchen: 'execution',
+  bedroom: 'innerDrive',
+  balcony: 'achievements',
 }
 
-// 每个选项值 → 柜子卡片的摘要短语
-const SUMMARY_MAP: Record<string, Record<string, string>> = {
-  q1: BULLET_MAP.q1,
-  q2: BULLET_MAP.q2,
-  q3: BULLET_MAP.q3,
-  q4: BULLET_MAP.q4,
-  q5: BULLET_MAP.q5,
-  q6: BULLET_MAP.q6,
+/** 房间中文名 */
+export const ROOM_CN: Record<string, string> = {
+  living: '沟通与协作',
+  study: '专业与学习',
+  kitchen: '执行与产出',
+  bedroom: '内驱与韧性',
+  balcony: '成果与影响',
+  collaboration: '协作方式',
+  professional: '专业能力',
+  execution: '执行产出',
+  innerDrive: '内驱韧性',
+  achievements: '成果影响',
 }
 
-/** 把一段经历的答案转成简历 bullet 列表 */
-export function experienceToBullets(experience: Experience): string[] {
+/** 把一段 cabin 经历的所有物品描述转成 bullet 列表 */
+export function cabinExperienceToBullets(exp: CabinExperience): string[] {
   const bullets: string[] = []
-  for (const answer of Object.values(experience.answers)) {
-    const map = BULLET_MAP[answer.questionId]
-    if (!map) continue
-
-    if (Array.isArray(answer.value)) {
-      for (const v of answer.value) {
-        if (map[v]) bullets.push(map[v])
-      }
-    } else if (typeof answer.value === 'string' && map[answer.value]) {
-      bullets.push(map[answer.value])
-    }
+  for (const item of itemDefs) {
+    const answers = exp.itemAnswers[item.id]
+    if (!answers) continue
+    const answered = item.questions.some(q => !!answers[q.prop])
+    if (!answered) continue
+    const info = describeItem(item, answers)
+    if (info.work) bullets.push(info.work)
   }
   return bullets
 }
 
-/** 从经历的所有答案中提取关键词摘要（用于柜子卡片展示） */
-export function getExperienceSummary(experience: Experience): string[] {
-  const tags: string[] = []
-  for (const answer of Object.values(experience.answers)) {
-    const map = SUMMARY_MAP[answer.questionId]
-    if (!map) continue
-
-    if (Array.isArray(answer.value)) {
-      for (const v of answer.value) {
-        if (map[v]) tags.push(map[v])
-      }
-    } else if (typeof answer.value === 'string' && map[answer.value]) {
-      tags.push(map[answer.value])
-    }
-  }
-  return tags
-}
-
-/** 把经历答案按维度分组，返回 { 维度名: [bullet, ...] } */
-export function experienceToDimensionBullets(experience: Experience): Record<string, string[]> {
+/** 把经历按房间分组，返回 { roomKey: [bullet, ...] } */
+export function cabinExperienceToRoomBullets(exp: CabinExperience): Record<string, string[]> {
   const result: Record<string, string[]> = {}
-  for (const answer of Object.values(experience.answers)) {
-    const dim = answer.dimension
+  for (const item of itemDefs) {
+    const answers = exp.itemAnswers[item.id]
+    if (!answers) continue
+    const answered = item.questions.some(q => !!answers[q.prop])
+    if (!answered) continue
+    const dim = ROOM_TO_DIM[item.room] || item.room
     if (!result[dim]) result[dim] = []
-    const map = BULLET_MAP[answer.questionId]
-    if (!map) continue
-
-    if (Array.isArray(answer.value)) {
-      for (const v of answer.value) {
-        if (map[v]) result[dim].push(map[v])
-      }
-    } else if (typeof answer.value === 'string' && map[answer.value]) {
-      result[dim].push(map[answer.value])
-    }
+    const info = describeItem(item, answers)
+    if (info.work) result[dim].push(info.work)
   }
   return result
 }
 
-/** 维度名中文映射 */
+/** 从经历的所有物品中提取描述摘要（用于卡片展示） */
+export function getCabinExperienceSummary(exp: CabinExperience): string[] {
+  const tags: string[] = []
+  for (const item of itemDefs) {
+    const answers = exp.itemAnswers[item.id]
+    if (!answers) continue
+    const answered = item.questions.some(q => !!answers[q.prop])
+    if (!answered) continue
+    const info = describeItem(item, answers)
+    // 取短描述（去掉前缀"一座"）
+    const short = info.desc.replace(/^一座/, '').slice(0, 20)
+    if (short) tags.push(short)
+  }
+  return tags
+}
+
+/** 获取房间完成度 */
+export function getRoomCompletion(exp: CabinExperience): Record<string, { answered: number; total: number }> {
+  const result: Record<string, { answered: number; total: number }> = {}
+  for (const room of ['living', 'study', 'kitchen', 'bedroom', 'balcony']) {
+    const items = ITEMS_BY_ROOM[room] || []
+    const answered = items.filter(item => {
+      const answers = exp.itemAnswers[item.id]
+      if (!answers) return false
+      return item.questions.some(q => !!answers[q.prop])
+    }).length
+    result[room] = { answered, total: items.length }
+  }
+  return result
+}
+
+// ============================================================
+// 兼容旧接口（供 resume store 使用）
+// ============================================================
+
+/** 兼容旧 Experience 接口的 bullets 生成 */
+export function experienceToBullets(experience: CabinExperience): string[] {
+  return cabinExperienceToBullets(experience)
+}
+
+/** 兼容旧接口：按维度分组 */
+export function experienceToDimensionBullets(experience: CabinExperience): Record<string, string[]> {
+  return cabinExperienceToRoomBullets(experience)
+}
+
+/** 兼容旧接口：摘要 */
+export function getExperienceSummary(experience: CabinExperience): string[] {
+  return getCabinExperienceSummary(experience)
+}
+
+/** 维度中文映射（兼容） */
 export const DIM_CN: Record<string, string> = {
+  ...ROOM_CN,
   dailyWork: '日常工作',
   collaboration: '协作方式',
   results: '项目经历',

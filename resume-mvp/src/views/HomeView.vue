@@ -18,7 +18,7 @@ const router = useRouter()
         title="记录我的经历"
         description="像和一位资深前辈聊天一样，通过温暖的问答对话，把实习经历完整地梳理成可视化的成长脑图。再也不用担心忘记那些重要的细节。"
         variant="a"
-        @click="router.push('/questionnaire')"
+        @click="router.push('/cabin')"
       />
       <FunctionCard
         badge="流程 B"

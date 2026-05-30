@@ -1,7 +1,7 @@
-import type { Experience } from '../types/experience'
+import type { CabinExperience } from '../types/cabin'
 
 const API_BASE = '/api/experiences'
-const EXPERIENCES_KEY = 'resume_app__experiences'
+const EXPERIENCES_KEY = 'resume_app__cabin_experiences'
 
 function safeParse<T>(json: string | null, fallback: T): T {
   if (!json) return fallback
@@ -12,24 +12,15 @@ function safeParse<T>(json: string | null, fallback: T): T {
   }
 }
 
-function getLocal(): Experience[] {
-  return safeParse<Experience[]>(localStorage.getItem(EXPERIENCES_KEY), [])
+function getLocal(): CabinExperience[] {
+  return safeParse<CabinExperience[]>(localStorage.getItem(EXPERIENCES_KEY), [])
 }
 
-function saveLocal(experiences: Experience[]): void {
+function saveLocal(experiences: CabinExperience[]): void {
   localStorage.setItem(EXPERIENCES_KEY, JSON.stringify(experiences))
 }
 
-async function apiAvailable(): Promise<boolean> {
-  try {
-    const res = await fetch(API_BASE, { method: 'GET' })
-    return res.ok
-  } catch {
-    return false
-  }
-}
-
-export async function getExperiences(): Promise<Experience[]> {
+export async function getExperiences(): Promise<CabinExperience[]> {
   try {
     const res = await fetch(API_BASE)
     if (!res.ok) throw new Error('API error')
@@ -41,7 +32,7 @@ export async function getExperiences(): Promise<Experience[]> {
   }
 }
 
-export async function addExperience(experience: Experience): Promise<Experience> {
+export async function addExperience(experience: CabinExperience): Promise<CabinExperience> {
   try {
     const res = await fetch(API_BASE, {
       method: 'POST',
@@ -49,7 +40,8 @@ export async function addExperience(experience: Experience): Promise<Experience>
       body: JSON.stringify({
         title: experience.title,
         direction: experience.direction,
-        answers: experience.answers,
+        itemAnswers: experience.itemAnswers,
+        roomPlacements: experience.roomPlacements,
       }),
     })
     if (!res.ok) throw new Error('API error')
@@ -66,7 +58,7 @@ export async function addExperience(experience: Experience): Promise<Experience>
   }
 }
 
-export async function getExperienceById(id: string): Promise<Experience | undefined> {
+export async function getExperienceById(id: string): Promise<CabinExperience | undefined> {
   try {
     const res = await fetch(`${API_BASE}/${id}`)
     if (!res.ok) throw new Error('API error')
@@ -86,7 +78,7 @@ export async function deleteExperience(id: string): Promise<void> {
   saveLocal(local)
 }
 
-export async function updateExperience(id: string, partial: Partial<Experience>): Promise<void> {
+export async function updateExperience(id: string, partial: Partial<CabinExperience>): Promise<void> {
   try {
     await fetch(`${API_BASE}/${id}`, {
       method: 'PUT',

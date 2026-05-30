@@ -12,23 +12,18 @@ from database import get_db, init_db
 
 # ---- Models ----
 
-class Answer(BaseModel):
-    questionId: str
-    type: str  # choice | multiChoice | slider | text
-    value: str | list[str] | int | float
-    dimension: str
-
-
 class ExperienceCreate(BaseModel):
     title: str
     direction: str | None = None
-    answers: dict[str, Answer] = Field(default_factory=dict)
+    itemAnswers: dict = Field(default_factory=dict)
+    roomPlacements: dict = Field(default_factory=dict)
 
 
 class ExperienceUpdate(BaseModel):
     title: str | None = None
     direction: str | None = None
-    answers: dict[str, Answer] | None = None
+    itemAnswers: dict | None = None
+    roomPlacements: dict | None = None
 
 
 # ---- App ----
@@ -53,13 +48,15 @@ app.add_middleware(
 # ---- Helpers ----
 
 def row_to_experience(row) -> dict:
+    data = json.loads(row["answers"])
     return {
         "id": row["id"],
         "title": row["title"],
         "direction": row["direction"],
         "createdAt": row["created_at"],
         "updatedAt": row["updated_at"],
-        "answers": json.loads(row["answers"]),
+        "itemAnswers": data.get("itemAnswers", {}),
+        "roomPlacements": data.get("roomPlacements", {}),
     }
 
 
@@ -95,7 +92,10 @@ async def create_experience(exp: ExperienceCreate):
     exp_id = str(uuid4())
     db = await get_db()
     try:
-        answers_json = json.dumps({k: v.model_dump() for k, v in exp.answers.items()})
+        answers_json = json.dumps({
+            "itemAnswers": exp.itemAnswers,
+            "roomPlacements": exp.roomPlacements,
+        })
         await db.execute(
             "INSERT INTO experiences (id, title, direction, created_at, updated_at, answers) VALUES (?, ?, ?, ?, ?, ?)",
             (exp_id, exp.title, exp.direction, now, now, answers_json),
@@ -107,7 +107,8 @@ async def create_experience(exp: ExperienceCreate):
             "direction": exp.direction,
             "createdAt": now,
             "updatedAt": now,
-            "answers": {k: v.model_dump() for k, v in exp.answers.items()},
+            "itemAnswers": exp.itemAnswers,
+            "roomPlacements": exp.roomPlacements,
         }
     finally:
         await db.close()
@@ -129,8 +130,13 @@ async def update_experience(exp_id: str, exp: ExperienceUpdate):
             updates["title"] = exp.title
         if exp.direction is not None:
             updates["direction"] = exp.direction
-        if exp.answers is not None:
-            updates["answers"] = json.dumps({k: v.model_dump() for k, v in exp.answers.items()})
+        if exp.itemAnswers is not None or exp.roomPlacements is not None:
+            existing = json.loads(row["answers"])
+            if exp.itemAnswers is not None:
+                existing["itemAnswers"] = exp.itemAnswers
+            if exp.roomPlacements is not None:
+                existing["roomPlacements"] = exp.roomPlacements
+            updates["answers"] = json.dumps(existing)
 
         set_clause = ", ".join(f"{k} = ?" for k in updates)
         await db.execute(

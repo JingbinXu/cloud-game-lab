@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { Experience } from '../types/experience'
+import type { CabinExperience } from '../types/cabin'
 import type { ResumeTemplate, ResumeSection, ResumeOutput } from '../types/resume'
 import { templates } from '../data/templates'
 import { experienceToDimensionBullets } from '../utils/answerMap'
@@ -36,7 +36,7 @@ export const useResumeStore = defineStore('resume', {
       }
     },
 
-    generateResume(experiences: Experience[]) {
+    generateResume(experiences: CabinExperience[]) {
       const template = this.selectedTemplate
       if (!template) return
 
@@ -58,7 +58,7 @@ export const useResumeStore = defineStore('resume', {
 
         if (bullets.length > 0) {
           sections.push({
-            title: template.sectionLabels[dim],
+            title: template.sectionLabels[dim] || dim,
             bullets,
           })
         }
@@ -66,7 +66,7 @@ export const useResumeStore = defineStore('resume', {
 
       this.resumeOutput = {
         templateId: template.id,
-        experiences: selectedExperiences,
+        experiences: selectedExperiences as any,
         sections,
         jobDescription: this.jobDescription,
       }

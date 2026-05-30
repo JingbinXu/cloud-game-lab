@@ -3,9 +3,9 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import type { Experience } from '../types/experience'
+import type { CabinExperience } from '../types/cabin'
 import { getExperiences } from '../utils/storage'
-import { experienceToDimensionBullets } from '../utils/answerMap'
+import { cabinExperienceToRoomBullets } from '../utils/answerMap'
 
 const props = defineProps<{
   id?: string
@@ -33,7 +33,7 @@ onMounted(async () => {
     return
   }
   experienceCount.value = allExps.length
-  setTimeout(() => initWarehouse(allExps), 300)
+  setTimeout(() => initWarehouse(allExps as any), 300)
 })
 
 onUnmounted(() => {
@@ -55,14 +55,14 @@ const DIR_LABELS: Record<string, string> = {
 
 // Dimension config per room type
 const DIM_CONFIG: Record<string, { label: string; color: string; hex: number; wall: string }> = {
-  dailyWork:     { label: '日常工作', color: '#E8B4B8', hex: 0xE8B4B8, wall: '#C98A8E' },
-  collaboration: { label: '协作模式', color: '#A8D8D9', hex: 0xA8D8D9, wall: '#78A8A9' },
-  results:       { label: '项目经历', color: '#F5E0C3', hex: 0xF5E0C3, wall: '#C5B093' },
-  softSkills:    { label: '能力成长', color: '#C4B5D8', hex: 0xC4B5D8, wall: '#9485A8' },
-  tools:         { label: '内心感受', color: '#B5C8A8', hex: 0xB5C8A8, wall: '#859878' },
+  collaboration: { label: '沟通与协作', color: '#E8B4B8', hex: 0xE8B4B8, wall: '#C98A8E' },
+  professional:  { label: '专业与学习', color: '#A8D8D9', hex: 0xA8D8D9, wall: '#78A8A9' },
+  execution:     { label: '执行与产出', color: '#F5E0C3', hex: 0xF5E0C3, wall: '#C5B093' },
+  innerDrive:    { label: '内驱与韧性', color: '#C4B5D8', hex: 0xC4B5D8, wall: '#9485A8' },
+  achievements:  { label: '成果与影响', color: '#B5C8A8', hex: 0xB5C8A8, wall: '#859878' },
 }
 
-function initWarehouse(allExps: Experience[]) {
+function initWarehouse(allExps: CabinExperience[]) {
   if (!container.value) { console.warn('container is null'); return }
   const el = container.value
   const width = el.clientWidth
@@ -70,7 +70,7 @@ function initWarehouse(allExps: Experience[]) {
   console.log('initWarehouse', { expCount: allExps.length, width, height })
 
   // Group experiences by direction
-  const dirGroups: Record<string, Experience[]> = {}
+  const dirGroups: Record<string, CabinExperience[]> = {}
   allExps.forEach(exp => {
     const dir = exp.direction || 'other'
     if (!dirGroups[dir]) dirGroups[dir] = []
@@ -243,7 +243,7 @@ function initWarehouse(allExps: Experience[]) {
     const winFrameMat = new THREE.MeshStandardMaterial({ color: '#8B7355', roughness: 0.7 })
     const winW = 0.7, winH = 0.8
     const winZ = -PD / 2 + 0.02
-    exps.forEach((exp, fi) => {
+    exps.forEach((_exp, fi) => {
       const fy = fi * FLOOR_H + FLOOR_H * 0.4
       // Two windows per floor
       for (let wx = -1; wx <= 1; wx += 2) {
@@ -304,7 +304,7 @@ function initWarehouse(allExps: Experience[]) {
       const fg = new THREE.Group()
       fg.position.set(bx, fy, bz)
 
-      const dimBullets = experienceToDimensionBullets(exp)
+      const dimBullets = cabinExperienceToRoomBullets(exp as any)
       const dimKeysWithContent = Object.keys(dimBullets).filter(k => dimBullets[k].length > 0)
 
       // Floor slab (warm wood color)
@@ -678,11 +678,11 @@ function initWarehouse(allExps: Experience[]) {
     <div class="brainmap-container" ref="container">
       <div class="brainmap-tip">拖拽旋转 | 滚轮缩放 | 点击房间查看详情</div>
       <div class="brainmap-legend">
-        <div><span class="dot-color" style="background:#E8B4B8;"></span> 日常工作</div>
-        <div><span class="dot-color" style="background:#A8D8D9;"></span> 协作模式</div>
-        <div><span class="dot-color" style="background:#F5E0C3;"></span> 项目经历</div>
-        <div><span class="dot-color" style="background:#C4B5D8;"></span> 能力成长</div>
-        <div><span class="dot-color" style="background:#B5C8A8;"></span> 内心感受</div>
+        <div><span class="dot-color" style="background:#E8B4B8;"></span> 沟通与协作</div>
+        <div><span class="dot-color" style="background:#A8D8D9;"></span> 专业与学习</div>
+        <div><span class="dot-color" style="background:#F5E0C3;"></span> 执行与产出</div>
+        <div><span class="dot-color" style="background:#C4B5D8;"></span> 内驱与韧性</div>
+        <div><span class="dot-color" style="background:#B5C8A8;"></span> 成果与影响</div>
       </div>
       <div class="tooltip" ref="tooltipEl"></div>
       <div class="floor-card" ref="floorCardEl">
@@ -696,7 +696,7 @@ function initWarehouse(allExps: Experience[]) {
     </div>
 
     <div class="brainmap-actions">
-      <button class="btn-primary" style="margin: 0;" @click="router.push('/questionnaire')">
+      <button class="btn-primary" style="margin: 0;" @click="router.push('/cabin')">
         再记录一段经历
       </button>
       <button class="btn-secondary" @click="router.push('/cabinet')">
