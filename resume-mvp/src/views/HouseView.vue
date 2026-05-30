@@ -22,7 +22,7 @@
     </div>
 
     <div class="house-content">
-      <CabinCanvas @item-click="onItemClick" />
+      <FloorPlanSVG />
     </div>
 
     <div class="room-bar">
@@ -44,7 +44,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useExperienceStore } from '../stores/experience'
 import { ROOM_DEFS } from '../types/cabin'
-import CabinCanvas from '../components/cabin/CabinCanvas.vue'
+import FloorPlanSVG from '../components/cabin/FloorPlanSVG.vue'
 import WorldviewScreen from '../components/cabin/WorldviewScreen.vue'
 
 const props = defineProps<{ id: string }>()
@@ -76,16 +76,11 @@ onMounted(async () => {
     showWorldview.value = true
   }
 })
-
-function onItemClick(itemId: string) {
-  // Show item info — for now just set active item
-  store.setActiveItem(itemId)
-}
 </script>
 
 <style scoped>
 .house-page {
-  background: var(--bg);
+  background: #000;
   display: flex;
   flex-direction: column;
   height: calc(100vh - 52px);
@@ -102,12 +97,11 @@ function onItemClick(itemId: string) {
 .top-bar h2 {
   font-size: 1.15rem;
   font-weight: 700;
-  color: var(--bark);
-  text-shadow: 1px 1px 0 rgba(255, 243, 224, 0.6);
+  color: #fff;
 }
 .subtitle {
   font-size: 0.78rem;
-  color: var(--bark-light);
+  color: #888;
   margin-top: 2px;
 }
 .btns {
@@ -117,7 +111,6 @@ function onItemClick(itemId: string) {
 .house-content {
   flex: 1;
   min-height: 0;
-  padding: 0 24px;
 }
 .room-bar {
   display: flex;
@@ -129,50 +122,34 @@ function onItemClick(itemId: string) {
 .room-chip {
   font-size: 0.78rem;
   padding: 6px 14px;
-  border-radius: var(--radius-sm);
-  background: var(--card-bg);
-  border: 2px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
-  color: var(--bark);
+  border-radius: 4px;
+  background: transparent;
+  border: 1.5px solid #555;
+  color: #ccc;
 }
 .room-chip.complete {
-  border: 2px solid var(--leaf);
-  background: var(--card-bg);
-  color: var(--leaf);
-  box-shadow: var(--shadow-sm);
+  border-color: #fff;
+  color: #fff;
 }
 .rc-count {
   font-size: 0.68rem;
-  color: var(--bark-light);
+  color: #666;
   margin-left: 4px;
 }
 .btn {
-  background: var(--bark);
-  color: var(--panel);
-  border: 2px solid var(--border-color);
-  padding: 13px 44px;
-  font-size: 0.95rem;
-  font-family: inherit;
-  font-weight: 700;
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-sm);
-  cursor: pointer;
-  transition: all 0.25s;
-  letter-spacing: 0.04em;
-  text-shadow: 1px 1px 0 rgba(62, 39, 35, 0.3);
-}
-.btn.ghost {
   background: transparent;
-  border: 2px solid var(--border-light);
-  color: var(--bark);
-  padding: 10px 30px;
-  font-size: 0.82rem;
-}
-.btn.ghost:hover {
-  background: var(--card-hover);
-}
-.btn.small {
+  color: #fff;
+  border: 1.5px solid #555;
   padding: 7px 16px;
   font-size: 0.75rem;
+  font-family: inherit;
+  font-weight: 700;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  letter-spacing: 0.04em;
+}
+.btn.ghost:hover {
+  border-color: #fff;
 }
 </style>
