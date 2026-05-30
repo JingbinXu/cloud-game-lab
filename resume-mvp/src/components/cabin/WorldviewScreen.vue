@@ -1,11 +1,17 @@
 <template>
-  <div class="worldview-overlay" :style="{ '--accent': color }">
+  <div class="worldview-overlay">
     <div class="worldview-card">
       <div class="wv-icon">{{ icon }}</div>
       <div class="wv-badge">{{ badge }}</div>
       <h2 class="wv-title">{{ title }}</h2>
       <p class="wv-subtitle">{{ subtitle }}</p>
-      <button class="wv-btn" @click="$emit('continue')">继续 →</button>
+      <button class="wv-btn" @click="$emit('continue')">
+        继续 ▶
+      </button>
+      <div class="card-corner tl"></div>
+      <div class="card-corner tr"></div>
+      <div class="card-corner bl"></div>
+      <div class="card-corner br"></div>
     </div>
   </div>
 </template>
@@ -30,8 +36,7 @@ defineEmits<{ (e: 'continue'): void }>()
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(6px);
+  background: rgba(62, 39, 35, 0.5);
   animation: fadeIn 0.4s ease;
 }
 @keyframes fadeIn {
@@ -39,62 +44,95 @@ defineEmits<{ (e: 'continue'): void }>()
   to { opacity: 1; }
 }
 .worldview-card {
-  background: #fff;
-  border-radius: 16px;
-  padding: 48px 40px;
-  max-width: 420px;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(139, 109, 74, 0.04) 0px,
+      rgba(139, 109, 74, 0.04) 1px,
+      transparent 1px,
+      transparent 4px
+    ),
+    #FFF8E1;
+  border: var(--border-pixel);
+  border-radius: var(--radius);
+  padding: 40px 36px;
+  max-width: 400px;
   width: 90%;
   text-align: center;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
-  animation: slideUp 0.5s ease;
+  box-shadow: var(--shadow-lg);
+  animation: pixelPop 0.4s ease;
+  position: relative;
 }
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(24px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes pixelPop {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
 }
+
+.card-corner {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: var(--border-color);
+}
+.card-corner.tl { top: -3px; left: -3px; }
+.card-corner.tr { top: -3px; right: -3px; }
+.card-corner.bl { bottom: -3px; left: -3px; }
+.card-corner.br { bottom: -3px; right: -3px; }
+
 .wv-icon {
   font-size: 3rem;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
+  filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.15));
 }
 .wv-badge {
   display: inline-block;
   font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  font-weight: 700;
   padding: 3px 12px;
-  border-radius: 20px;
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
-  color: var(--accent);
-  margin-bottom: 16px;
+  background: var(--golden);
+  color: var(--bark);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-xs);
+  margin-bottom: 14px;
+  box-shadow: var(--shadow-sm);
+  text-shadow: 1px 1px 0 rgba(255,255,255,0.3);
 }
 .wv-title {
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   font-weight: 700;
-  color: #2c2416;
-  margin-bottom: 12px;
+  color: var(--bark);
+  margin-bottom: 10px;
   line-height: 1.4;
+  text-shadow: 1px 1px 0 rgba(255,255,255,0.5);
 }
 .wv-subtitle {
-  font-size: 0.88rem;
-  color: #8b7a65;
-  line-height: 1.7;
-  margin-bottom: 28px;
+  font-size: 0.85rem;
+  color: var(--bark-light);
+  line-height: 1.8;
+  margin-bottom: 24px;
 }
 .wv-btn {
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  padding: 12px 40px;
-  font-size: 0.95rem;
-  font-family: inherit;
-  border-radius: 40px;
+  background: var(--golden);
+  color: var(--bark);
+  border: 2px solid var(--border-color);
+  padding: 10px 32px;
+  font-size: 0.88rem;
+  font-family: var(--font-body);
+  font-weight: 700;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.25s;
-  letter-spacing: 0.04em;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.15s;
+  text-shadow: 1px 1px 0 rgba(255,255,255,0.3);
+  letter-spacing: 1px;
 }
 .wv-btn:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 18px color-mix(in srgb, var(--accent) 30%, transparent);
+  background: var(--golden-light);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+.wv-btn:active {
+  transform: translateY(1px);
+  box-shadow: none;
 }
 </style>

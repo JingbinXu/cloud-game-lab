@@ -89,6 +89,7 @@ function getItemRecord(item: CabinItemDef): string {
 
 <style scoped>
 .backpack-page {
+  background: var(--bg);
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -105,7 +106,8 @@ function getItemRecord(item: CabinItemDef): string {
 .top-bar h2 {
   font-size: 1.15rem;
   font-weight: 700;
-  color: #2c2416;
+  color: var(--bark);
+  text-shadow: 1px 1px 0 rgba(255, 243, 224, 0.6);
 }
 .btns {
   display: flex;
@@ -121,8 +123,9 @@ function getItemRecord(item: CabinItemDef): string {
 .room-title {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #2c2416;
+  color: var(--bark);
   margin-bottom: 12px;
+  text-shadow: 1px 1px 0 rgba(255, 243, 224, 0.6);
 }
 .card-grid {
   display: grid;
@@ -130,67 +133,71 @@ function getItemRecord(item: CabinItemDef): string {
   gap: 12px;
 }
 .item-card {
-  background: #fff;
-  border: 1px solid #d4c8b8;
-  border-radius: 12px;
+  background: var(--card-bg);
+  border: var(--border-pixel);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
   padding: 14px;
 }
 .card-name {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #2c2416;
+  color: var(--bark);
   margin-bottom: 6px;
 }
 .card-desc {
   font-size: 0.78rem;
-  color: #5a4a35;
+  color: var(--bark-light);
   line-height: 1.5;
   margin-bottom: 4px;
 }
 .card-record {
   font-size: 0.72rem;
-  color: #8b7a65;
+  color: var(--bark-light);
   line-height: 1.5;
 }
 .empty-state {
   text-align: center;
-  color: #a09080;
+  color: var(--bark-light);
   padding: 60px 20px;
 }
 .empty-state p {
   margin: 6px 0;
 }
 .empty-state a {
-  color: #4a6fa5;
+  color: var(--leaf);
   text-decoration: underline;
 }
 .hint-text {
   text-align: center;
-  color: #8b7a65;
+  color: var(--bark-light);
   font-size: 0.78rem;
   margin-top: 4px;
 }
 .btn {
-  background: #2c2416;
-  color: #fafaf8;
-  border: none;
+  background: var(--bark);
+  color: var(--panel);
+  border: 2px solid var(--border-color);
   padding: 13px 44px;
   font-size: 0.95rem;
   font-family: inherit;
-  border-radius: 40px;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
   transition: all 0.25s;
   letter-spacing: 0.04em;
+  text-shadow: 1px 1px 0 rgba(62, 39, 35, 0.3);
 }
 .btn.ghost {
   background: transparent;
-  border: 1.5px solid #8b7a65;
-  color: #5a4a35;
+  border: 2px solid var(--border-light);
+  color: var(--bark);
   padding: 10px 30px;
   font-size: 0.82rem;
 }
 .btn.ghost:hover {
-  background: #f5ede0;
+  background: var(--card-hover);
 }
 .btn.small {
   padding: 7px 16px;

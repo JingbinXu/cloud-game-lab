@@ -1,7 +1,7 @@
 <template>
   <div class="dialog-overlay" @click.self="$emit('close')">
     <div class="dialog-card">
-      <h3>记录一段新经历</h3>
+      <h3>📋 记录一段新经历</h3>
       <p class="dialog-desc">给这段经历起个名字，选择对应的岗位方向</p>
 
       <div class="field">
@@ -31,9 +31,13 @@
       </div>
 
       <div class="dialog-actions">
-        <button class="btn cancel" @click="$emit('close')">取消</button>
-        <button class="btn confirm" :disabled="!canConfirm" @click="onConfirm">开始探索</button>
+        <button class="pixel-btn ghost" @click="$emit('close')">取消</button>
+        <button class="pixel-btn green" :disabled="!canConfirm" @click="onConfirm">开始探索 ▶</button>
       </div>
+      <div class="card-corner tl"></div>
+      <div class="card-corner tr"></div>
+      <div class="card-corner bl"></div>
+      <div class="card-corner br"></div>
     </div>
   </div>
 </template>
@@ -75,117 +79,149 @@ function onConfirm() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(4px);
+  background: rgba(62, 39, 35, 0.5);
+  animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 .dialog-card {
-  background: #fff;
-  border-radius: 16px;
-  padding: 32px;
-  max-width: 440px;
+  background: var(--card-bg);
+  border: var(--border-pixel);
+  border-radius: var(--radius);
+  padding: 28px;
+  max-width: 420px;
   width: 90%;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  animation: pixelPop 0.3s ease;
 }
+@keyframes pixelPop {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.card-corner {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: var(--border-color);
+}
+.card-corner.tl { top: -3px; left: -3px; }
+.card-corner.tr { top: -3px; right: -3px; }
+.card-corner.bl { bottom: -3px; left: -3px; }
+.card-corner.br { bottom: -3px; right: -3px; }
+
 .dialog-card h3 {
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 700;
-  color: #2c2416;
+  color: var(--bark);
   margin-bottom: 4px;
+  text-shadow: 1px 1px 0 rgba(255,255,255,0.5);
 }
 .dialog-desc {
   font-size: 0.82rem;
-  color: #8b7a65;
-  margin-bottom: 24px;
+  color: var(--bark-light);
+  margin-bottom: 20px;
 }
 .field {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 .field label {
   display: block;
   font-size: 0.82rem;
-  font-weight: 600;
-  color: #5a4a35;
-  margin-bottom: 8px;
+  font-weight: 700;
+  color: var(--bark);
+  margin-bottom: 6px;
+  text-shadow: 1px 1px 0 rgba(255,255,255,0.5);
 }
 .field input {
   width: 100%;
-  padding: 10px 14px;
-  border: 1.5px solid #d4c8b8;
-  border-radius: 10px;
-  font-size: 0.9rem;
-  font-family: inherit;
-  color: #2c2416;
+  padding: 10px 12px;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-xs);
+  font-size: 0.88rem;
+  font-family: var(--font-body);
+  color: var(--bark);
+  background: #FFF;
   outline: none;
-  transition: border-color 0.2s;
+  transition: all 0.15s;
   box-sizing: border-box;
+  box-shadow: inset 1px 1px 0 rgba(0,0,0,0.05);
 }
 .field input:focus {
-  border-color: #8b7a65;
+  border-color: var(--golden);
+  background: #FFFBF0;
 }
 .field input::placeholder {
-  color: #c8b898;
+  color: #BCAAA4;
 }
 .direction-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  gap: 6px;
 }
 .dir-btn {
-  background: #fafaf8;
-  border: 1.5px solid #d4c8b8;
-  border-radius: 10px;
-  padding: 10px 8px;
-  font-size: 0.82rem;
-  font-family: inherit;
-  color: #5a4a35;
+  background: var(--panel);
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-xs);
+  padding: 9px 6px;
+  font-size: 0.78rem;
+  font-family: var(--font-body);
+  color: var(--bark-light);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
   white-space: nowrap;
 }
 .dir-btn:hover {
-  border-color: #8b7a65;
-  background: #f5ede0;
+  border-color: var(--border-color);
+  background: var(--card-hover);
 }
 .dir-btn.active {
-  border-color: #2c2416;
-  background: #f0e8d8;
-  color: #2c2416;
-  font-weight: 600;
+  border-color: var(--border-color);
+  background: var(--golden);
+  color: var(--bark);
+  font-weight: 700;
+  box-shadow: var(--shadow-sm);
+  text-shadow: 1px 1px 0 rgba(255,255,255,0.3);
 }
 .dialog-actions {
   display: flex;
-  gap: 10px;
-  margin-top: 24px;
+  gap: 8px;
+  margin-top: 20px;
 }
-.btn {
+.pixel-btn {
   flex: 1;
-  padding: 11px 20px;
-  border-radius: 40px;
-  font-size: 0.88rem;
-  font-family: inherit;
+  padding: 9px 16px;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-family: var(--font-body);
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.25s;
-  border: none;
-  letter-spacing: 0.04em;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.15s;
+  text-shadow: 1px 1px 0 rgba(255,255,255,0.3);
 }
-.btn.cancel {
-  background: transparent;
-  border: 1.5px solid #d4c8b8;
-  color: #8b7a65;
+.pixel-btn.green {
+  background: var(--leaf);
+  color: #fff;
 }
-.btn.cancel:hover {
-  background: #f5ede0;
-}
-.btn.confirm {
-  background: #2c2416;
-  color: #fafaf8;
-}
-.btn.confirm:hover:not(:disabled) {
-  background: #4a3d2a;
+.pixel-btn.green:hover:not(:disabled) {
+  background: var(--leaf-light);
   transform: translateY(-1px);
+  box-shadow: var(--shadow);
 }
-.btn.confirm:disabled {
+.pixel-btn.green:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+.pixel-btn.ghost {
+  background: var(--panel);
+  color: var(--bark-light);
+}
+.pixel-btn.ghost:hover {
+  background: var(--card-hover);
 }
 </style>

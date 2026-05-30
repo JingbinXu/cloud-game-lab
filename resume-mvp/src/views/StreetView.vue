@@ -304,6 +304,7 @@ watch(() => store.experiences, () => render(), { deep: true })
 
 <style scoped>
 .street-page {
+  background: var(--bg);
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -318,7 +319,8 @@ watch(() => store.experiences, () => render(), { deep: true })
 .top-bar h2 {
   font-size: 1.15rem;
   font-weight: 700;
-  color: #2c2416;
+  color: var(--bark);
+  text-shadow: 1px 1px 0 rgba(255, 243, 224, 0.6);
 }
 .btns {
   display: flex;
@@ -326,36 +328,41 @@ watch(() => store.experiences, () => render(), { deep: true })
 }
 canvas {
   display: block;
-  border-radius: 16px;
+  border-radius: var(--radius);
+  border: var(--border-pixel);
+  box-shadow: var(--shadow);
   max-width: 100%;
 }
 .hint-text {
   text-align: center;
-  color: #8b7a65;
+  color: var(--bark-light);
   font-size: 0.78rem;
   margin-top: 4px;
 }
 .btn {
-  background: #2c2416;
-  color: #fafaf8;
-  border: none;
+  background: var(--bark);
+  color: var(--panel);
+  border: 2px solid var(--border-color);
   padding: 13px 44px;
   font-size: 0.95rem;
   font-family: inherit;
-  border-radius: 40px;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
   transition: all 0.25s;
   letter-spacing: 0.04em;
+  text-shadow: 1px 1px 0 rgba(62, 39, 35, 0.3);
 }
 .btn.ghost {
   background: transparent;
-  border: 1.5px solid #8b7a65;
-  color: #5a4a35;
+  border: 2px solid var(--border-light);
+  color: var(--bark);
   padding: 10px 30px;
   font-size: 0.82rem;
 }
 .btn.ghost:hover {
-  background: #f5ede0;
+  background: var(--card-hover);
 }
 .btn.small {
   padding: 7px 16px;

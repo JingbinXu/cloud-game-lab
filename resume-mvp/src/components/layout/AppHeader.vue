@@ -7,9 +7,13 @@ const router = useRouter()
 <template>
   <nav class="nav">
     <router-link to="/" class="nav-logo">
-      <span class="icon">🌳</span> 记忆树
+      <span class="logo-icon">🏡</span>
+      <span class="logo-text">记忆小屋</span>
     </router-link>
-    <div class="nav-avatar" @click="router.push('/')" title="个人账户">R</div>
+    <div class="nav-actions">
+      <button class="nav-btn" @click="router.push('/street')" title="记忆街区">🗺️</button>
+      <button class="nav-btn" @click="router.push('/backpack')" title="背包">🎒</button>
+    </div>
   </nav>
 </template>
 
@@ -18,45 +22,74 @@ const router = useRouter()
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 48px;
-  background: linear-gradient(180deg, rgba(255, 248, 240, 0.95) 0%, rgba(255, 248, 240, 0) 100%);
+  padding: 10px 24px;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(139, 109, 74, 0.06) 0px,
+      rgba(139, 109, 74, 0.06) 2px,
+      transparent 2px,
+      transparent 8px
+    ),
+    linear-gradient(180deg, #6D4C41 0%, #5D4037 100%);
+  border-bottom: 3px solid #3E2723;
   position: sticky;
   top: 0;
   z-index: 100;
-  backdrop-filter: blur(10px);
+  box-shadow: 0 3px 0 #3E2723;
 }
 
 .nav-logo {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--bark);
+  gap: 8px;
   cursor: pointer;
+  text-decoration: none;
 }
 
-.nav-logo .icon {
-  font-size: 28px;
+.logo-icon {
+  font-size: 24px;
+  filter: drop-shadow(1px 1px 0 rgba(0,0,0,0.3));
 }
 
-.nav-avatar {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--wood), var(--golden));
+.logo-text {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 700;
+  color: #FFD54F;
+  text-shadow:
+    1px 1px 0 #3E2723,
+    -1px -1px 0 transparent,
+    2px 0 0 #3E2723;
+  letter-spacing: 2px;
+}
+
+.nav-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.nav-btn {
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
-  font-weight: 600;
+  font-size: 18px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-xs);
   cursor: pointer;
-  transition: var(--transition);
-  border: 2px solid transparent;
+  transition: all 0.15s;
+  padding: 0;
 }
 
-.nav-avatar:hover {
-  border-color: var(--golden);
-  transform: scale(1.05);
+.nav-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.nav-btn:active {
+  transform: translateY(1px);
 }
 </style>
