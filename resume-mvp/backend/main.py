@@ -3,6 +3,8 @@ from datetime import datetime, timezone
 from contextlib import asynccontextmanager
 from uuid import uuid4
 
+from typing import Optional
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -14,16 +16,16 @@ from database import get_db, init_db
 
 class ExperienceCreate(BaseModel):
     title: str
-    direction: str | None = None
+    direction: Optional[str] = None
     itemAnswers: dict = Field(default_factory=dict)
     roomPlacements: dict = Field(default_factory=dict)
 
 
 class ExperienceUpdate(BaseModel):
-    title: str | None = None
-    direction: str | None = None
-    itemAnswers: dict | None = None
-    roomPlacements: dict | None = None
+    title: Optional[str] = None
+    direction: Optional[str] = None
+    itemAnswers: Optional[dict] = None
+    roomPlacements: Optional[dict] = None
 
 
 # ---- App ----

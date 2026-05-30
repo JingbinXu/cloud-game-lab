@@ -46,7 +46,6 @@ const store = useExperienceStore()
 
 const canvasRef = ref<HTMLCanvasElement>()
 const showNewDialog = ref(false)
-
 const showWorldview = ref(false)
 
 const jobTypes = ['product', 'ops', 'marketing', 'tech', 'data', 'other']
@@ -54,6 +53,8 @@ const jobNames: Record<string, string> = {
   product: '产品', ops: '运营', marketing: '市场',
   tech: '技术', data: '数据', other: '其他',
 }
+
+const roofColors = ['#c44a3f', '#4a9c5e', '#d4a04a', '#5a8cc4', '#9c5ab5', '#c47a3f']
 
 interface HitBox { x: number; y: number; w: number; h: number; idx: number; type: 'house' | 'empty' }
 let hitboxes: HitBox[] = []
@@ -75,172 +76,303 @@ function render() {
   if (!canvasRef.value) return
   const ctx = canvasRef.value.getContext('2d')!
   const dpr = Math.min(window.devicePixelRatio || 1, 2)
-  const w = 880, h = 380
-  canvasRef.value.width = w * dpr
-  canvasRef.value.height = h * dpr
+  const cssW = 880, cssH = 380
+  canvasRef.value.width = cssW * dpr
+  canvasRef.value.height = cssH * dpr
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-  ctx.clearRect(0, 0, w, h)
+  ctx.clearRect(0, 0, cssW, cssH)
+  ctx.imageSmoothingEnabled = false
   hitboxes = []
 
-  // Sky
-  const skyGrad = ctx.createLinearGradient(0, 0, 0, h * 0.55)
-  skyGrad.addColorStop(0, '#f5f2ed')
-  skyGrad.addColorStop(1, '#fafaf8')
-  ctx.fillStyle = skyGrad
-  ctx.fillRect(0, 0, w, h)
-  // Ground
-  ctx.fillStyle = '#f0ebe0'
-  ctx.fillRect(0, h * 0.55, w, h * 0.45)
-  ctx.fillStyle = '#e8e0d5'
-  ctx.fillRect(0, h * 0.78, w, h * 0.12)
-  // Road
-  ctx.beginPath()
-  ctx.moveTo(0, h * 0.78)
-  ctx.lineTo(w, h * 0.78)
-  ctx.strokeStyle = '#d4c8b8'
-  ctx.lineWidth = 0.5
-  ctx.stroke()
-  ctx.setLineDash([10, 14])
-  ctx.lineWidth = 0.6
-  ctx.strokeStyle = '#c8b898'
-  ctx.beginPath()
-  ctx.moveTo(0, h * 0.84)
-  ctx.lineTo(w, h * 0.84)
-  ctx.stroke()
-  ctx.setLineDash([])
-  ctx.strokeStyle = '#2c2416'
-  ctx.lineWidth = 2
+  const PX = 2 // each pixel-art unit = 2 CSS px
+  const W = cssW / PX, H = cssH / PX
 
-  // Trees
-  for (let i = 0; i < 8; i++) {
-    const tx = 30 + i * 120
-    ctx.beginPath()
-    ctx.moveTo(tx, h * 0.76)
-    ctx.lineTo(tx, h * 0.78)
-    ctx.stroke()
-    ctx.beginPath()
-    ctx.arc(tx, h * 0.72, 10, 0, Math.PI * 2)
-    ctx.stroke()
-    ctx.beginPath()
-    ctx.arc(tx - 5, h * 0.68, 7, 0, Math.PI * 2)
-    ctx.stroke()
-    ctx.beginPath()
-    ctx.arc(tx + 5, h * 0.67, 7, 0, Math.PI * 2)
-    ctx.stroke()
-  }
+  // ── Background ──
+  drawSky(ctx, PX, W)
+  drawGround(ctx, PX, W, H)
+  drawPath(ctx, PX, W, H)
+  drawStones(ctx, PX)
+  drawBGTrees(ctx, PX)
 
-  const plots = [{ x: 95 }, { x: 225 }, { x: 355 }, { x: 485 }, { x: 615 }, { x: 745 }]
-  const houseW = 90, baseY = h * 0.72, floorH = 32
+  // ── Houses ──
+  const groundY = 100
+  const houseW = 62
+  const spacing = W / 6
+  const plots = Array.from({ length: 6 }, (_, i) => Math.round(spacing * i + spacing / 2))
 
-  plots.forEach((plot, i) => {
+  plots.forEach((cx, i) => {
     const jt = jobTypes[i]
     const exps = store.experiences.filter(inv => inv.direction === jt)
-    const cnt = exps.length
-    if (cnt > 0) {
-      const hh = 24 + cnt * floorH + 20, hx = plot.x - houseW / 2, hy = baseY - hh
-      ctx.fillStyle = '#fdfcf9'
-      ctx.fillRect(hx, hy, houseW, hh - 20)
-      ctx.strokeStyle = '#2c2416'
-      ctx.lineWidth = 2
-      ctx.strokeRect(hx, hy, houseW, hh - 20)
-      // Roof
-      ctx.fillStyle = '#f5ede0'
-      ctx.beginPath()
-      ctx.moveTo(hx - 8, hy)
-      ctx.lineTo(plot.x, hy - 22)
-      ctx.lineTo(hx + houseW + 8, hy)
-      ctx.closePath()
-      ctx.fill()
-      ctx.strokeStyle = '#2c2416'
-      ctx.beginPath()
-      ctx.moveTo(hx - 8, hy)
-      ctx.lineTo(plot.x, hy - 22)
-      ctx.lineTo(hx + houseW + 8, hy)
-      ctx.stroke()
-      // Floors
-      ctx.lineWidth = 0.6
-      ctx.strokeStyle = '#c8b898'
-      for (let f = 1; f < cnt; f++) {
-        const fy = hy + 24 + f * floorH
-        ctx.beginPath()
-        ctx.moveTo(hx, fy)
-        ctx.lineTo(hx + houseW, fy)
-        ctx.stroke()
-      }
-      ctx.strokeStyle = '#2c2416'
-      ctx.lineWidth = 2
-      // Windows with floor labels
-      for (let f = 0; f < cnt; f++) {
-        const wy = hy + 28 + f * floorH
-        ctx.strokeRect(hx + 12, wy, 16, 16)
-        ctx.strokeRect(hx + houseW - 28, wy, 16, 16)
-        // Floor number
-        ctx.fillStyle = '#8b7a65'
-        ctx.font = '9px "Noto Serif SC","SimSun",serif'
-        ctx.fillText(`${f + 1}F`, hx + 36, wy + 12)
-        // Experience title (truncated)
-        const expTitle = exps[f].title
-        const maxW = houseW - 60
-        let display = expTitle
-        while (ctx.measureText(display).width > maxW && display.length > 2) {
-          display = display.slice(0, -1)
-        }
-        if (display !== expTitle) display += '…'
-        ctx.fillStyle = '#5a4a35'
-        ctx.font = '9px "PingFang SC","Microsoft YaHei",sans-serif'
-        ctx.fillText(display, hx + 52, wy + 12)
-      }
-      // Door
-      ctx.fillStyle = '#fafaf8'
-      ctx.fillRect(plot.x - 10, hy + hh - 44, 20, 24)
-      ctx.strokeStyle = '#2c2416'
-      ctx.lineWidth = 2
-      ctx.strokeRect(plot.x - 10, hy + hh - 44, 20, 24)
-      ctx.beginPath()
-      ctx.arc(plot.x + 6, hy + hh - 32, 2, 0, Math.PI * 2)
-      ctx.fill()
-      // Label
-      ctx.fillStyle = '#2c2416'
-      ctx.font = 'bold 11px "Noto Serif SC","SimSun",serif'
-      const label = jobNames[jt]
-      ctx.fillText(label, plot.x - ctx.measureText(label).width / 2, hy - 26)
-      ctx.fillStyle = '#8b7a65'
-      ctx.font = '9px "Noto Serif SC","SimSun",serif'
-      ctx.fillText(cnt + '层', plot.x - 6, hy + hh - 10)
-      hitboxes.push({ x: hx, y: hy, w: houseW, h: hh, idx: i, type: 'house' })
+    const hx = Math.round(cx - houseW / 2)
+
+    if (exps.length > 0) {
+      const bodyH = 10 + exps.length * 14 + 6
+      const roofH = 14
+      const hy = groundY - bodyH - roofH
+      drawPixelHouse(ctx, PX, hx, hy, houseW, bodyH, roofH, roofColors[i], exps)
+      hitboxes.push({ x: hx * PX, y: hy * PX, w: houseW * PX, h: (bodyH + roofH) * PX, idx: i, type: 'house' })
     } else {
-      ctx.strokeStyle = '#d4c8b8'
-      ctx.lineWidth = 1
-      ctx.setLineDash([4, 4])
-      ctx.strokeRect(plot.x - houseW / 2, baseY - 50, houseW, 50)
-      ctx.setLineDash([])
-      ctx.strokeStyle = '#2c2416'
-      ctx.lineWidth = 2
-      ctx.beginPath()
-      ctx.moveTo(plot.x, baseY - 30)
-      ctx.lineTo(plot.x, baseY)
-      ctx.stroke()
-      ctx.strokeRect(plot.x - 18, baseY - 48, 36, 16)
-      ctx.fillStyle = '#8b7a65'
-      ctx.font = '9px "Noto Serif SC","SimSun",serif'
-      ctx.fillText('待建造', plot.x - 16, baseY - 36)
-      hitboxes.push({ x: plot.x - houseW / 2, y: baseY - 50, w: houseW, h: 50, idx: i, type: 'empty' })
+      drawEmptyPlot(ctx, PX, cx, groundY, houseW)
+      hitboxes.push({ x: (cx - houseW / 2) * PX, y: (groundY - 26) * PX, w: houseW * PX, h: 26 * PX, idx: i, type: 'empty' })
     }
-    // Plot line
-    ctx.strokeStyle = '#e8e0d5'
-    ctx.lineWidth = 0.3
-    ctx.beginPath()
-    ctx.moveTo(plot.x - 65, baseY - 80)
-    ctx.lineTo(plot.x - 65, baseY + 5)
-    ctx.stroke()
-    ctx.strokeStyle = '#2c2416'
-    ctx.lineWidth = 2
   })
 
-  ctx.fillStyle = '#a09080'
-  ctx.font = '10px "Noto Serif SC","SimSun",serif'
-  ctx.fillText('点击房屋进入查看 →', w - 160, h - 20)
+  // ── Text overlay (HTML text on pixel-art scene) ──
+  drawTextOverlay(ctx, cssW, cssH, plots, PX)
 }
+
+/* ── Pixel-art helpers ── */
+
+function fillR(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, PX: number) {
+  ctx.fillRect(x * PX, y * PX, w * PX, h * PX)
+}
+function outlineR(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, PX: number) {
+  ctx.strokeRect(x * PX, y * PX, w * PX, h * PX)
+}
+
+function drawSky(ctx: CanvasRenderingContext2D, PX: number, W: number) {
+  const skyH = 100
+  const grad = ctx.createLinearGradient(0, 0, 0, skyH * PX)
+  grad.addColorStop(0, '#6bb5e3')
+  grad.addColorStop(0.55, '#8ecae6')
+  grad.addColorStop(1, '#b8dced')
+  ctx.fillStyle = grad
+  ctx.fillRect(0, 0, W * PX, skyH * PX)
+
+  // Clouds
+  ctx.fillStyle = '#e8f0f8'
+  fillR(ctx, 38, 12, 20, 5, PX)
+  fillR(ctx, 43, 9, 12, 4, PX)
+  fillR(ctx, 155, 18, 16, 4, PX)
+  fillR(ctx, 160, 15, 8, 4, PX)
+  fillR(ctx, 275, 10, 22, 5, PX)
+  fillR(ctx, 280, 7, 14, 4, PX)
+  fillR(ctx, 370, 20, 14, 4, PX)
+}
+
+function drawGround(ctx: CanvasRenderingContext2D, PX: number, W: number, H: number) {
+  ctx.fillStyle = '#7ab84a'
+  fillR(ctx, 0, 100, W, 10, PX)
+  ctx.fillStyle = '#6aa83c'
+  for (let x = 0; x < W; x += 4) fillR(ctx, x, 100, 2, 1, PX)
+  for (let x = 2; x < W; x += 6) fillR(ctx, x, 102, 1, 1, PX)
+  ctx.fillStyle = '#8cc854'
+  for (let x = 1; x < W; x += 5) fillR(ctx, x, 104, 2, 1, PX)
+
+  ctx.fillStyle = '#c4a468'
+  fillR(ctx, 0, 110, W, H - 110, PX)
+  ctx.fillStyle = '#b8985c'
+  for (let x = 0; x < W; x += 7) fillR(ctx, x, 112, 3, 2, PX)
+  for (let x = 3; x < W; x += 9) fillR(ctx, x, 120, 2, 1, PX)
+}
+
+function drawPath(ctx: CanvasRenderingContext2D, PX: number, W: number, H: number) {
+  const cx = Math.round(W / 2)
+  ctx.fillStyle = '#d4bc8c'
+  fillR(ctx, cx - 10, 100, 20, H - 100, PX)
+  ctx.fillStyle = '#c8ac78'
+  for (let y = 102; y < H; y += 5) {
+    fillR(ctx, cx - 8, y, 2, 2, PX)
+    fillR(ctx, cx + 4, y + 2, 2, 1, PX)
+  }
+  ctx.fillStyle = '#e0c898'
+  fillR(ctx, cx - 10, 100, 20, 1, PX)
+}
+
+function drawStones(ctx: CanvasRenderingContext2D, PX: number) {
+  ctx.fillStyle = '#9a8a6a'
+  const cx = Math.round(440 / PX / 2)
+  const stones = [
+    [cx - 14, 105], [cx - 8, 112], [cx + 10, 108], [cx - 12, 125],
+    [cx + 12, 122], [cx - 6, 135], [cx + 8, 138],
+  ]
+  for (const [sx, sy] of stones) fillR(ctx, sx, sy, 2, 2, PX)
+}
+
+function drawBGTrees(ctx: CanvasRenderingContext2D, PX: number) {
+  const positions = [18, 72, 175, 268, 360, 412]
+  for (const tx of positions) {
+    drawPixelTree(ctx, PX, tx, 92)
+  }
+}
+
+function drawPixelTree(ctx: CanvasRenderingContext2D, PX: number, cx: number, gy: number) {
+  ctx.fillStyle = '#6b4226'
+  fillR(ctx, cx, gy - 8, 2, 8, PX)
+  ctx.fillStyle = '#3a8c3a'
+  fillR(ctx, cx - 4, gy - 14, 10, 4, PX)
+  fillR(ctx, cx - 2, gy - 18, 6, 4, PX)
+  fillR(ctx, cx - 5, gy - 12, 12, 2, PX)
+  ctx.fillStyle = '#48a848'
+  fillR(ctx, cx - 3, gy - 16, 2, 2, PX)
+  fillR(ctx, cx + 1, gy - 13, 2, 2, PX)
+}
+
+function drawPixelHouse(
+  ctx: CanvasRenderingContext2D, PX: number,
+  x: number, y: number, w: number, bodyH: number, roofH: number,
+  roofColor: string, exps: any[]
+) {
+  const cx = Math.round(x + w / 2)
+
+  // ── Roof (filled + outline) ──
+  const overhang = 6
+  const roofL = x - overhang
+  const roofR = x + w + overhang
+  const roofTotalW = roofR - roofL
+
+  ctx.fillStyle = roofColor
+  for (let rx = 0; rx < roofTotalW; rx++) {
+    const distFromCenter = Math.abs(rx - roofTotalW / 2) / (roofTotalW / 2)
+    const rh = Math.max(1, Math.ceil((1 - distFromCenter) * roofH))
+    fillR(ctx, roofL + rx, y + roofH - rh, 1, rh, PX)
+  }
+  // Roof light edge (left half highlight)
+  ctx.fillStyle = lighten(roofColor, 0.2)
+  for (let rx = 0; rx < Math.floor(roofTotalW / 2); rx++) {
+    const distFromCenter = Math.abs(rx - roofTotalW / 2) / (roofTotalW / 2)
+    const rh = Math.max(1, Math.ceil((1 - distFromCenter) * roofH))
+    fillR(ctx, roofL + rx, y + roofH - rh, 1, 1, PX)
+  }
+  // Roof outline
+  ctx.strokeStyle = '#3a2a1a'
+  ctx.lineWidth = PX
+  ctx.beginPath()
+  ctx.moveTo(roofL * PX, (y + roofH) * PX)
+  ctx.lineTo(cx * PX, y * PX)
+  ctx.lineTo(roofR * PX, (y + roofH) * PX)
+  ctx.closePath()
+  ctx.stroke()
+
+  // ── Chimney ──
+  const chimX = cx + Math.floor(w / 4)
+  ctx.fillStyle = '#8b6a50'
+  fillR(ctx, chimX, y - 4, 4, 6, PX)
+  ctx.strokeStyle = '#3a2a1a'
+  ctx.lineWidth = PX
+  outlineR(ctx, chimX, y - 4, 4, 6, PX)
+
+  // ── Body ──
+  ctx.fillStyle = '#f5ede0'
+  fillR(ctx, x, y + roofH, w, bodyH, PX)
+  ctx.strokeStyle = '#3a2a1a'
+  ctx.lineWidth = PX
+  outlineR(ctx, x, y + roofH, w, bodyH, PX)
+
+  // ── Floor lines ──
+  for (let f = 1; f < exps.length; f++) {
+    const fy = y + roofH + 10 + f * 14
+    ctx.fillStyle = '#d4c8b0'
+    fillR(ctx, x + 1, fy, w - 2, 1, PX)
+  }
+
+  // ── Windows ──
+  for (let f = 0; f < exps.length; f++) {
+    const wy = y + roofH + 4 + f * 14
+    const winPositions = [x + 4, x + w - 11]
+    for (const wx of winPositions) {
+      ctx.fillStyle = '#8ab8d8'
+      fillR(ctx, wx, wy, 7, 7, PX)
+      ctx.strokeStyle = '#3a2a1a'
+      ctx.lineWidth = PX
+      outlineR(ctx, wx, wy, 7, 7, PX)
+      ctx.fillStyle = '#3a2a1a'
+      fillR(ctx, wx + 3, wy, 1, 7, PX)
+      fillR(ctx, wx, wy + 3, 7, 1, PX)
+    }
+  }
+
+  // ── Door ──
+  const doorY = y + roofH + bodyH - 14
+  ctx.fillStyle = '#7a5a14'
+  fillR(ctx, cx - 3, doorY, 6, 12, PX)
+  ctx.strokeStyle = '#3a2a1a'
+  ctx.lineWidth = PX
+  outlineR(ctx, cx - 3, doorY, 6, 12, PX)
+  ctx.fillStyle = '#c8a030'
+  fillR(ctx, cx + 1, doorY + 6, 1, 1, PX)
+  // Door arch
+  ctx.fillStyle = '#f5ede0'
+  fillR(ctx, cx - 4, doorY - 1, 8, 1, PX)
+  // Steps
+  ctx.fillStyle = '#c8b898'
+  fillR(ctx, cx - 4, doorY + 12, 8, 2, PX)
+  fillR(ctx, cx - 5, doorY + 14, 10, 2, PX)
+  ctx.strokeStyle = '#8a7a5a'
+  ctx.lineWidth = 1
+  outlineR(ctx, cx - 4, doorY + 12, 8, 2, PX)
+  outlineR(ctx, cx - 5, doorY + 14, 10, 2, PX)
+
+  // ── Grass tufts at base ──
+  ctx.fillStyle = '#5a9a32'
+  fillR(ctx, x - 1, y + roofH + bodyH, 2, 2, PX)
+  fillR(ctx, x + w - 1, y + roofH + bodyH, 2, 2, PX)
+  fillR(ctx, cx + 8, y + roofH + bodyH, 2, 1, PX)
+}
+
+function drawEmptyPlot(ctx: CanvasRenderingContext2D, PX: number, cx: number, gy: number, w: number) {
+  const hx = Math.round(cx - w / 2)
+  ctx.strokeStyle = '#b8a888'
+  ctx.lineWidth = PX
+  ctx.setLineDash([3 * PX, 3 * PX])
+  outlineR(ctx, hx, gy - 26, w, 26, PX)
+  ctx.setLineDash([])
+  ctx.fillStyle = '#8a7a5a'
+  fillR(ctx, cx, gy - 20, 2, 20, PX)
+}
+
+function drawTextOverlay(
+  ctx: CanvasRenderingContext2D, cssW: number, cssH: number,
+  plots: number[], PX: number
+) {
+  ctx.imageSmoothingEnabled = true
+
+  plots.forEach((cx, i) => {
+    const px = cx * PX
+    const exps = store.experiences.filter(inv => inv.direction === jobTypes[i])
+    if (exps.length > 0) {
+      const bodyH = 10 + exps.length * 14 + 6
+      const roofH = 14
+      const hy = (100 - bodyH - roofH) * PX
+
+      ctx.fillStyle = '#fff'
+      ctx.font = 'bold 11px "Noto Serif SC","SimSun",serif'
+      ctx.textAlign = 'center'
+      ctx.strokeStyle = '#3a2a1a'
+      ctx.lineWidth = 3
+      ctx.strokeText(jobNames[jobTypes[i]], px, hy - 8)
+      ctx.fillText(jobNames[jobTypes[i]], px, hy - 8)
+
+      ctx.fillStyle = '#e8e0d5'
+      ctx.font = '9px "Noto Serif SC","SimSun",serif'
+      ctx.strokeText(exps.length + '层', px, hy + (bodyH + roofH) * PX + 14)
+      ctx.fillText(exps.length + '层', px, hy + (bodyH + roofH) * PX + 14)
+    } else {
+      ctx.fillStyle = '#b8a888'
+      ctx.font = '10px "Noto Serif SC","SimSun",serif'
+      ctx.textAlign = 'center'
+      ctx.fillText('待建造', px, (100 - 12) * PX)
+    }
+  })
+
+  ctx.fillStyle = '#e0d8c8'
+  ctx.font = '10px "Noto Serif SC","SimSun",serif'
+  ctx.textAlign = 'right'
+  ctx.fillText('点击房屋进入查看 →', cssW - 16, cssH - 16)
+  ctx.textAlign = 'left'
+}
+
+function lighten(hex: string, amt: number): string {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  const lr = Math.min(255, r + Math.round((255 - r) * amt))
+  const lg = Math.min(255, g + Math.round((255 - g) * amt))
+  const lb = Math.min(255, b + Math.round((255 - b) * amt))
+  return `#${lr.toString(16).padStart(2, '0')}${lg.toString(16).padStart(2, '0')}${lb.toString(16).padStart(2, '0')}`
+}
+
+/* ── Interaction ── */
 
 function onCanvasClick(e: MouseEvent) {
   if (!canvasRef.value) return
@@ -253,21 +385,18 @@ function onCanvasClick(e: MouseEvent) {
     const hb = hitboxes[i]
     if (mx >= hb.x && mx <= hb.x + hb.w && my >= hb.y && my <= hb.y + hb.h) {
       if (hb.type === 'empty') {
-        // Clicked empty building → new experience
         showNewDialog.value = true
       } else {
-        // Clicked existing building → find experience to enter
         const jt = jobTypes[hb.idx]
         const exps = store.experiences.filter(inv => inv.direction === jt)
         if (exps.length > 0) {
-          // Determine which floor was clicked
-          const baseY = 380 * 0.72
-          const floorH = 32
-          const cnt = exps.length
-          const hh = 24 + cnt * floorH + 20
-          const hy = baseY - hh
-          const relY = my - hy - 24
-          const floorIdx = Math.min(Math.max(Math.floor(relY / floorH), 0), cnt - 1)
+          const PX = 2
+          const bodyH = 10 + exps.length * 14 + 6
+          const roofH = 14
+          const hy = (100 - bodyH - roofH) * PX
+          const relY = my - hy - roofH * PX - 10
+          const floorH = 14 * PX
+          const floorIdx = Math.min(Math.max(Math.floor(relY / floorH), 0), exps.length - 1)
           router.push(`/house/${exps[floorIdx].id}`)
         }
       }
@@ -286,8 +415,7 @@ function onCanvasMove(e: MouseEvent) {
   for (let i = hitboxes.length - 1; i >= 0; i--) {
     const hb = hitboxes[i]
     if (mx >= hb.x && mx <= hb.x + hb.w && my >= hb.y && my <= hb.y + hb.h) {
-      found = true
-      break
+      found = true; break
     }
   }
   canvasRef.value.style.cursor = found ? 'pointer' : 'default'
@@ -332,6 +460,7 @@ canvas {
   border: var(--border-pixel);
   box-shadow: var(--shadow);
   max-width: 100%;
+  image-rendering: pixelated;
 }
 .hint-text {
   text-align: center;
