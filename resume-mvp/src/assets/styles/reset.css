@@ -1,0 +1,100 @@
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg);
+  color: var(--bark);
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+  image-rendering: auto;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+input, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  border: none;
+  outline: none;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+/* 星露谷全局像素边框工具类 */
+.pixel-border {
+  border: var(--border-pixel);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.pixel-btn {
+  background: var(--golden);
+  color: var(--bark);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 8px 20px;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.15s;
+  text-shadow: 1px 1px 0 rgba(255,255,255,0.3);
+}
+
+.pixel-btn:hover {
+  background: var(--golden-light);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+.pixel-btn:active {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+.pixel-btn.green {
+  background: var(--leaf);
+  color: #fff;
+}
+
+.pixel-btn.green:hover {
+  background: var(--leaf-light);
+}
+
+.pixel-btn.ghost {
+  background: var(--panel);
+  color: var(--bark);
+  border-color: var(--border-color);
+}
+
+.pixel-btn.ghost:hover {
+  background: var(--card-hover);
+}
+
+.pixel-btn.small {
+  padding: 5px 12px;
+  font-size: 0.72rem;
+}
