@@ -52,11 +52,11 @@ export interface RoomDef {
 }
 
 export const ROOM_DEFS: RoomDef[] = [
-  { id: 'living', name: '客厅 · 沟通与协作', shortName: '客厅', emoji: '🛋️', bounds: { x: 0, y: 3, w: 5, h: 3 } },
-  { id: 'study', name: '书房 · 专业与学习', shortName: '书房', emoji: '📚', bounds: { x: 1.5, y: 6, w: 3.5, h: 2.5 } },
   { id: 'kitchen', name: '厨房 · 执行与产出', shortName: '厨房', emoji: '🍳', bounds: { x: 0, y: 0, w: 3, h: 3 } },
-  { id: 'bedroom', name: '卧室 · 内驱与韧性', shortName: '卧室', emoji: '🛏️', bounds: { x: 1.5, y: 0, w: 3, h: 3 } },
-  { id: 'balcony', name: '阳台 · 成果与影响', shortName: '阳台', emoji: '🌿', bounds: { x: 3.5, y: 0, w: 2.5, h: 3 } },
+  { id: 'bedroom', name: '卧室 · 内驱与韧性', shortName: '主卧', emoji: '🛏️', bounds: { x: 3, y: 0, w: 3, h: 3 } },
+  { id: 'living', name: '客厅 · 沟通与协作', shortName: '客厅', emoji: '🛋️', bounds: { x: 0, y: 3, w: 6, h: 3 } },
+  { id: 'study', name: '书房 · 专业与学习', shortName: '书房', emoji: '📚', bounds: { x: 0, y: 6, w: 2, h: 2.5 } },
+  { id: 'balcony', name: '阳台 · 成果与影响', shortName: '阳台', emoji: '🌿', bounds: { x: 2, y: 6, w: 4, h: 2.5 } },
 ]
 
 export const ROOM_CN: Record<RoomId, string> = {

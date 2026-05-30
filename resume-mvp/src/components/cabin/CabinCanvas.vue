@@ -16,10 +16,13 @@ import { ROOM_DEFS, describeItem, type RoomId, type GridPos } from '../../types/
 import { itemDefs, ITEM_BY_ID } from '../../data/itemDefs'
 import { drawFnMap } from './itemDrawers'
 
-const TILE_W = 86
-const TILE_H = 43
-const ORIGIN_X = 430
-const ORIGIN_Y = 55
+const GRID_W = 6
+const GRID_H = 8.5
+let TILE_W = 80
+let TILE_H = 80
+let TILE_SIZE = 80
+let ORIGIN_X = 60
+let ORIGIN_Y = 40
 
 const store = useExperienceStore()
 const { currentItemAnswers, currentRoomPlacements } = storeToRefs(store)
@@ -41,8 +44,8 @@ const emit = defineEmits<{
 
 function toScreen(tx: number, ty: number, tz: number) {
   return {
-    x: ORIGIN_X + (tx - ty) * (TILE_W / 2),
-    y: ORIGIN_Y + (tx + ty) * (TILE_H / 2) - tz * TILE_H,
+    x: ORIGIN_X + tx * TILE_W,
+    y: ORIGIN_Y + ty * TILE_H,
   }
 }
 
@@ -100,51 +103,135 @@ function render() {
   ctx.clearRect(0, 0, w, h)
   ctx.fillStyle = '#fafaf8'
   ctx.fillRect(0, 0, w, h)
-  itemHitboxes = []
 
+  // 动态计算，X/Y 独立拉伸，铺满整个 canvas（不留空隙）
+  TILE_W = w / GRID_W
+  TILE_H = h / GRID_H
+  TILE_SIZE = Math.min(TILE_W, TILE_H)
+  ORIGIN_X = 0
+  ORIGIN_Y = 0
+
+  itemHitboxes = []
   const cabinItems = getCabinItems()
 
-  // Draw rooms
-  const allRooms: RoomId[] = ['kitchen', 'bedroom', 'balcony', 'living', 'study']
+  const labels: Record<string, string> = { kitchen: '厨房', bedroom: '卧室', balcony: '阳台', living: '客厅', study: '书房' }
+  const WALL = 4 // 墙体线宽
+
+  // ========== 填充房间 ==========
+  const allRooms: RoomId[] = ['kitchen', 'bedroom', 'living', 'study', 'balcony']
   allRooms.forEach(rk => {
     const r = ROOM_DEFS.find(rd => rd.id === rk)!
-    const corners = [toScreen(r.bounds.x, r.bounds.y, 0), toScreen(r.bounds.x + r.bounds.w, r.bounds.y, 0), toScreen(r.bounds.x + r.bounds.w, r.bounds.y + r.bounds.h, 0), toScreen(r.bounds.x, r.bounds.y + r.bounds.h, 0)]
+    const x = ORIGIN_X + r.bounds.x * TILE_W
+    const y = ORIGIN_Y + r.bounds.y * TILE_H
+    const rw = r.bounds.w * TILE_W
+    const rh = r.bounds.h * TILE_H
     ctx!.fillStyle = '#fdfcf9'
-    ctx!.beginPath(); ctx!.moveTo(corners[0].x, corners[0].y); ctx!.lineTo(corners[1].x, corners[1].y); ctx!.lineTo(corners[2].x, corners[2].y); ctx!.lineTo(corners[3].x, corners[3].y); ctx!.closePath(); ctx!.fill()
-    ctx!.strokeStyle = '#c8b898'; ctx!.lineWidth = 0.7; ctx!.stroke()
-    ctx!.strokeStyle = '#2c2416'; ctx!.lineWidth = 1.6
+    ctx!.fillRect(x, y, rw, rh)
 
-    // Walls
-    if (rk !== 'balcony') {
-      const wh = 16
-      const tr = toScreen(r.bounds.x + r.bounds.w, r.bounds.y, 0)
-      const br = toScreen(r.bounds.x + r.bounds.w, r.bounds.y + r.bounds.h, 0)
-      const bl = toScreen(r.bounds.x, r.bounds.y + r.bounds.h, 0)
-      ctx!.beginPath(); ctx!.moveTo(tr.x, tr.y); ctx!.lineTo(tr.x, tr.y - wh); ctx!.lineTo(br.x, br.y - wh); ctx!.lineTo(br.x, br.y); ctx!.stroke()
-      ctx!.beginPath(); ctx!.moveTo(br.x, br.y); ctx!.lineTo(br.x, br.y - wh); ctx!.lineTo(bl.x, bl.y - wh); ctx!.lineTo(bl.x, bl.y); ctx!.stroke()
-    }
-
-    // Room label
-    const lp = toScreen(r.bounds.x + r.bounds.w / 2, r.bounds.y + r.bounds.h / 2, 0)
-    ctx!.fillStyle = '#c8b898'; ctx!.font = '11px "Noto Serif SC","SimSun",serif'
-    const labels: Record<string, string> = { kitchen: '厨房', bedroom: '卧室', balcony: '阳台', living: '客厅', study: '书房' }
-    ctx!.fillText(labels[rk], lp.x - 12, lp.y)
+    // 房间标签
+    ctx!.fillStyle = '#b8a888'
+    ctx!.font = 'bold 15px "Noto Serif SC","SimSun",serif'
+    ctx!.textAlign = 'center'
+    ctx!.textBaseline = 'middle'
+    ctx!.fillText(labels[rk], x + rw / 2, y + rh / 2)
   })
 
-  // Roof
-  const tl = toScreen(0, 0, 0), tr2 = toScreen(6, 0, 0), roofH = 28
-  ctx!.lineWidth = 1.4; ctx!.strokeStyle = '#3a2a16'
-  ctx!.beginPath(); ctx!.moveTo(tl.x - 12, tl.y - 4); ctx!.lineTo((tl.x + tr2.x) / 2, tl.y - roofH); ctx!.lineTo(tr2.x + 12, tr2.y - 4); ctx!.stroke()
-  ctx!.strokeStyle = '#2c2416'; ctx!.lineWidth = 1.6
+  // ========== 绘制墙体 ==========
+  ctx!.strokeStyle = '#2c2416'
+  ctx!.lineWidth = WALL
+  allRooms.forEach(rk => {
+    const r = ROOM_DEFS.find(rd => rd.id === rk)!
+    const x = ORIGIN_X + r.bounds.x * TILE_W
+    const y = ORIGIN_Y + r.bounds.y * TILE_H
+    const rw = r.bounds.w * TILE_W
+    const rh = r.bounds.h * TILE_H
+    ctx!.strokeRect(x, y, rw, rh)
+  })
 
-  // Door
-  const dc = toScreen(2.5, 5.9, 0)
-  ctx!.lineWidth = 1.4
-  ctx!.beginPath(); ctx!.moveTo(dc.x - 8, dc.y); ctx!.lineTo(dc.x - 8, dc.y - 14); ctx!.lineTo(dc.x + 8, dc.y - 14); ctx!.lineTo(dc.x + 8, dc.y); ctx!.stroke()
-  ctx!.beginPath(); ctx!.arc(dc.x + 5, dc.y - 7, 1.8, 0, Math.PI * 2); ctx!.fill()
-  ctx!.lineWidth = 1.6
+  // ========== 辅助函数 ==========
+  function drawArc(gx: number, gy: number, sweepDown: boolean, sweepRight: boolean, leafLen: number) {
+    const cx = ORIGIN_X + gx * TILE_W
+    const cy = ORIGIN_Y + gy * TILE_H
+    const r = leafLen * TILE_W
+    ctx!.strokeStyle = '#2c2416'
+    ctx!.lineWidth = 2
+    // 门扇线
+    if (sweepDown) {
+      ctx!.beginPath(); ctx!.moveTo(cx, cy); ctx!.lineTo(cx, cy + r); ctx!.stroke()
+    } else {
+      ctx!.beginPath(); ctx!.moveTo(cx, cy); ctx!.lineTo(cx + r, cy); ctx!.stroke()
+    }
+    // 弧线
+    let startA: number, endA: number
+    if (sweepDown && sweepRight) { startA = -Math.PI / 2; endA = 0 }
+    else if (sweepDown && !sweepRight) { startA = Math.PI; endA = Math.PI / 2; sweepRight }
+    else if (!sweepDown && sweepRight) { startA = Math.PI; endA = -Math.PI / 2 }
+    else { startA = -Math.PI / 2; endA = Math.PI }
+    ctx!.beginPath()
+    ctx!.arc(cx, cy, r, startA, endA, !sweepRight)
+    ctx!.stroke()
+  }
 
-  // Draw items
+  // ========== 入户门（北墙） ==========
+  const entryX = ORIGIN_X + 1 * TILE_W
+  const entryY = ORIGIN_Y + 0
+  ctx!.strokeStyle = '#2c2416'
+  ctx!.lineWidth = 3
+  ctx!.beginPath(); ctx!.moveTo(entryX, entryY); ctx!.lineTo(entryX + 1.4 * TILE_W, entryY); ctx!.stroke()
+  ctx!.lineWidth = 1.5
+  ctx!.beginPath(); ctx!.moveTo(entryX, entryY + 3); ctx!.lineTo(entryX + 1.4 * TILE_W, entryY + 3); ctx!.stroke()
+  // 入户门弧线
+  ctx!.lineWidth = 2
+  ctx!.beginPath(); ctx!.moveTo(entryX, entryY); ctx!.lineTo(entryX, entryY + 0.8 * TILE_H); ctx!.stroke()
+  ctx!.beginPath(); ctx!.arc(entryX, entryY, 0.8 * TILE_H, Math.PI / 2, 0, true); ctx!.stroke()
+
+  // ========== 室内门（圆弧表示） ==========
+  // 厨房→客厅：南墙 x=1
+  drawArc(1, 3, true, true, 0.7)
+  // 主卧→客厅：南墙 x=4
+  drawArc(4, 3, true, true, 0.7)
+  // 主卧→次卧：西墙 y=1.5
+  drawArc(3, 1.5, false, true, 0.7)
+  // 书房→阳台：南墙 x=1
+  drawArc(1, 6, true, true, 0.7)
+
+  // ========== 窗户 ==========
+  ctx!.strokeStyle = '#6ba3d6'
+  ctx!.lineWidth = 2.5
+  function drawWin(gx: number, gy: number, horizontal: boolean, len: number) {
+    const px = ORIGIN_X + gx * TILE_W
+    const py = ORIGIN_Y + gy * TILE_H
+    if (horizontal) {
+      // 水平墙上的窗 → 三线段
+      ctx!.beginPath(); ctx!.moveTo(px, py - 3); ctx!.lineTo(px + len, py - 3); ctx!.stroke()
+      ctx!.beginPath(); ctx!.moveTo(px, py + 3); ctx!.lineTo(px + len, py + 3); ctx!.stroke()
+      ctx!.beginPath(); ctx!.moveTo(px, py); ctx!.lineTo(px + len, py); ctx!.stroke()
+    } else {
+      ctx!.beginPath(); ctx!.moveTo(px - 3, py); ctx!.lineTo(px - 3, py + len); ctx!.stroke()
+      ctx!.beginPath(); ctx!.moveTo(px + 3, py); ctx!.lineTo(px + 3, py + len); ctx!.stroke()
+      ctx!.beginPath(); ctx!.moveTo(px, py); ctx!.lineTo(px, py + len); ctx!.stroke()
+    }
+  }
+  // 北墙窗户
+  drawWin(0.5, 0, true, 1.5 * TILE_W)   // 厨房
+  drawWin(3.8, 0, true, 1.5 * TILE_W)   // 主卧
+  // 南墙窗户
+  drawWin(0.8, 6, true, 0.8 * TILE_W)   // 书房
+  drawWin(2.5, 3, true, 1.5 * TILE_W)   // 客厅
+  drawWin(4.3, 6, true, 1.2 * TILE_W)   // 阳台
+
+  // ========== 北方向标 ==========
+  const nX = w - 35, nY = 35
+  ctx!.strokeStyle = '#bbb'
+  ctx!.lineWidth = 1.5
+  ctx!.beginPath(); ctx!.moveTo(nX, nY + 12); ctx!.lineTo(nX, nY - 12); ctx!.stroke()
+  ctx!.beginPath(); ctx!.moveTo(nX - 6, nY - 8); ctx!.lineTo(nX, nY - 14); ctx!.lineTo(nX + 6, nY - 8); ctx!.fill()
+  ctx!.fillStyle = '#bbb'
+  ctx!.font = 'bold 11px sans-serif'
+  ctx!.textAlign = 'center'
+  ctx!.fillText('N', nX, nY - 18)
+
+  // ========== 绘制物品 ==========
   const allEntries: { id: string; sx: number; sy: number; room: string; answers: Record<string, string> }[] = []
   Object.entries(cabinItems).forEach(([room, items]) => {
     items.forEach(item => {
@@ -203,9 +290,8 @@ function onMouseMove(e: MouseEvent) {
 
   if (dragState?.active) {
     const screenX = mx - dragState.offsetX + 18, screenY = my - dragState.offsetY + 20
-    const rx = screenX - ORIGIN_X, ry = screenY - ORIGIN_Y
-    const tx = (rx / (TILE_W / 2) + ry / (TILE_H / 2)) / 2
-    const ty = (ry / (TILE_H / 2) - rx / (TILE_W / 2)) / 2
+    const tx = (screenX - ORIGIN_X) / TILE_W
+    const ty = (screenY - ORIGIN_Y) / TILE_H
     const snapTx = Math.round(tx / 0.35) * 0.35
     const snapTy = Math.round(ty / 0.35) * 0.35
     const rb = ROOM_DEFS.find(rd => rd.id === dragState!.room)?.bounds
@@ -294,8 +380,8 @@ watch([currentItemAnswers, currentRoomPlacements], () => scheduleRender(), { dee
 }
 .cabin-canvas-wrap canvas {
   display: block;
-  border-radius: 16px;
-  max-width: 100%;
+  border: 4px solid #2c2416;
+  box-sizing: border-box;
   width: 100%;
   height: 100%;
 }
