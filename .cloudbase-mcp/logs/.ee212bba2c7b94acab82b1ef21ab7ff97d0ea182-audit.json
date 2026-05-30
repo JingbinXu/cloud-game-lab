@@ -6,9 +6,9 @@
     "auditLog": "/tmp/workspace/557f1c83-d232-431d-944e-d47152ed2d83/.cloudbase-mcp/logs/.ee212bba2c7b94acab82b1ef21ab7ff97d0ea182-audit.json",
     "files": [
         {
-            "date": 1780147759141,
+            "date": 1780146048174,
             "name": "/tmp/workspace/557f1c83-d232-431d-944e-d47152ed2d83/.cloudbase-mcp/logs/cloudbase-mcp-2026-05-30.log",
-            "hash": "7729738c941e079b98c19c20e11321f969c7894d965227bf984e99c9a80c387a"
+            "hash": "d4302c687228bfb8f072fd8f47cec5040bd4668959157643c21d7e91004e3855"
         }
     ],
     "hashType": "sha256"
