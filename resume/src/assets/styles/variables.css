@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+:root {
+  /* ═══════ 星露谷色板 ═══════ */
+  --bg: #E8D5B0;
+  --bg-grass: #7CB342;
+  --bg-sky: #87CEEB;
+  --bg-sky-dark: #5BA3D9;
+
+  --panel: #FFF3E0;
+  --panel-dark: #F5E0B8;
+
+  --border-color: #5C4033;
+  --border-light: #8D6E4A;
+  --border-pixel: 3px solid #5C4033;
+
+  --bark: #3E2723;
+  --bark-light: #6D4C41;
+
+  --wood: #A1887F;
+  --wood-deep: #795548;
+  --wood-light: #D7CCC8;
+
+  --golden: #F9A825;
+  --golden-light: #FFD54F;
+
+  --leaf: #4A7C3F;
+  --leaf-light: #7CB342;
+
+  --heart: #E53935;
+  --sky: #64B5F6;
+  --water: #42A5F5;
+
+  --card-bg: #FFF8E1;
+  --card-hover: #FFF3D0;
+
+  /* 星露谷阴影: 硬边像素风 */
+  --shadow: 3px 3px 0 rgba(62, 39, 35, 0.2);
+  --shadow-lg: 5px 5px 0 rgba(62, 39, 35, 0.25);
+  --shadow-sm: 2px 2px 0 rgba(62, 39, 35, 0.15);
+
+  --radius: 8px;
+  --radius-sm: 6px;
+  --radius-xs: 4px;
+
+  --transition: 0.2s ease;
+
+  /* 星露谷像素字体 */
+  --font-pixel: 'Zpix', 'Press Start 2P', monospace;
+  --font-body: 'Zpix', 'Press Start 2P', -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
