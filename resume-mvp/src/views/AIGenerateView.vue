@@ -109,7 +109,6 @@ async function startGenerate() {
 }
 
 // ---- Step 3: 生成结果 ----
-const editingModule = ref<ModuleType | null>(null)
 
 async function handleRegenerate(type: ModuleType) {
   const experiences = experienceStore.experiences.filter(e =>

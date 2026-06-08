@@ -123,7 +123,7 @@ function render() {
       drawPixelHouse(ctx, PX, hx, hy, houseW, bodyH, roofH, floors)
       hitboxes.push({ x: hx * PX, y: hy * PX, w: houseW * PX, h: (bodyH + roofH) * PX, idx: i, type: 'house' })
       // Draw label sign
-      drawLabel(ctx, PX, hx + houseW + 4, groundY - 12, houseSigns[jt] || '???')
+      drawLabel(ctx, PX, hx + houseW + 4, groundY - 12, jobNames[jt] || '???')
     } else {
       drawEmptyPlot(ctx, PX, cx, groundY, houseW)
       hitboxes.push({ x: (cx - houseW / 2) * PX, y: (groundY - 26) * PX, w: houseW * PX, h: 26 * PX, idx: i, type: 'empty' })

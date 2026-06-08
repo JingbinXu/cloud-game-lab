@@ -43,10 +43,10 @@ jobs:
             git pull origin main
 
             # 更新后端依赖
-            cd backend
+            cd resume-mvp/backend
             source venv/bin/activate
             pip install -r requirements.txt -q
-            cd ..
+            cd /home/ubuntu/resume-mvp
 
             # 重启后端服务
             sudo systemctl restart resume-mvp-backend

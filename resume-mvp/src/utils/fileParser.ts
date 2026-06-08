@@ -64,7 +64,7 @@ export async function parseWord(file: File): Promise<string> {
   }
 
   const arrayBuffer = await file.arrayBuffer()
-  let result: mammoth.Result
+  let result: { value: string }
   try {
     result = await mammoth.extractRawText({ arrayBuffer })
   } catch {

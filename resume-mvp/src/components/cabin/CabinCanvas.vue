@@ -20,7 +20,6 @@ const GRID_W = 6
 const GRID_H = 8.5
 let TILE_W = 80
 let TILE_H = 80
-let TILE_SIZE = 80
 let ORIGIN_X = 60
 let ORIGIN_Y = 40
 
@@ -42,7 +41,7 @@ const emit = defineEmits<{
   (e: 'item-click', itemId: string): void
 }>()
 
-function toScreen(tx: number, ty: number, tz: number) {
+function toScreen(tx: number, ty: number, _tz: number) {
   return {
     x: ORIGIN_X + tx * TILE_W,
     y: ORIGIN_Y + ty * TILE_H,
@@ -107,7 +106,6 @@ function render() {
   // 动态计算，X/Y 独立拉伸，铺满整个 canvas（不留空隙）
   TILE_W = w / GRID_W
   TILE_H = h / GRID_H
-  TILE_SIZE = Math.min(TILE_W, TILE_H)
   ORIGIN_X = 0
   ORIGIN_Y = 0
 
