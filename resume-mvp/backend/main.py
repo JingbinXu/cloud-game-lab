@@ -1,15 +1,24 @@
+from __future__ import annotations
 import json
 from datetime import datetime, timezone
 from contextlib import asynccontextmanager
 from uuid import uuid4
+import os
 
-from typing import Optional
+from dotenv import load_dotenv
 
-from fastapi import FastAPI, HTTPException
+load_dotenv()
+
+from typing import Dict, List, Optional
+
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from database import get_db, init_db
+from module_mapping import get_module_config, list_modules
+import llm_service
 
 
 # ---- Models ----
@@ -26,6 +35,18 @@ class ExperienceUpdate(BaseModel):
     direction: Optional[str] = None
     itemAnswers: Optional[dict] = None
     roomPlacements: Optional[dict] = None
+
+
+class GenerateRequest(BaseModel):
+    modules: List[str]
+    contextTexts: Dict[str, str] = Field(default_factory=dict)
+    resumeText: Optional[str] = None
+
+
+class AIResultUpsert(BaseModel):
+    moduleType: str
+    content: dict
+    sourceExperienceIds: List[str] = Field(default_factory=list)
 
 
 # ---- App ----
@@ -166,6 +187,109 @@ async def delete_experience(exp_id: str):
         return {"ok": True}
     finally:
         await db.close()
+
+
+# ---- AI Generate (SSE) ----
+
+def _load_prompt(module_type: str, context_text: str, resume_text: str) -> str:
+    config = get_module_config(module_type)
+    if not config:
+        raise ValueError(f"未知模块类型: {module_type}")
+    template_path = os.path.join(os.path.dirname(__file__), "prompts", f"{config.prompt_template}.txt")
+    with open(template_path, encoding="utf-8") as f:
+        template = f.read()
+    return template.replace("{context}", context_text).replace("{resume_text}", resume_text or "（未上传简历）")
+
+
+async def _generate_stream(request: Request, modules: List[str], context_texts: Dict[str, str], resume_text: Optional[str]):
+    for module_type in modules:
+        if await request.is_disconnected():
+            break
+
+        config = get_module_config(module_type)
+        if not config:
+            yield f"event: module_error\ndata: {json.dumps({'module': module_type, 'error': f'未知模块: {module_type}'})}\n\n"
+            continue
+
+        # 合并所有房间的上下文文本
+        full_context = "\n\n".join(context_texts.values()) if context_texts else "（无 QA 数据）"
+        prompt = _load_prompt(module_type, full_context, resume_text or "")
+
+        try:
+            content = await llm_service.generate_resume_content(module_type, prompt)
+            yield f"event: module_done\ndata: {json.dumps({'module': module_type, 'content': content})}\n\n"
+        except Exception as e:
+            yield f"event: module_error\ndata: {json.dumps({'module': module_type, 'error': str(e)})}\n\n"
+
+    yield f"event: all_done\ndata: {json.dumps({})}\n\n"
+
+
+@app.post("/api/generate")
+async def generate_content(body: GenerateRequest, request: Request):
+    if not llm_service.is_configured():
+        raise HTTPException(status_code=503, detail="LLM API Key 未配置")
+
+    return StreamingResponse(
+        _generate_stream(request, body.modules, body.contextTexts, body.resumeText),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+# ---- AI Results CRUD ----
+
+@app.get("/api/ai-results")
+async def list_ai_results():
+    db = await get_db()
+    try:
+        cursor = await db.execute("SELECT * FROM ai_results ORDER BY updated_at DESC")
+        rows = await cursor.fetchall()
+        return [
+            {
+                "id": row["id"],
+                "moduleType": row["module_type"],
+                "content": json.loads(row["content_json"]),
+                "sourceExperienceIds": json.loads(row["source_experience_ids"]),
+                "createdAt": row["created_at"],
+                "updatedAt": row["updated_at"],
+            }
+            for row in rows
+        ]
+    finally:
+        await db.close()
+
+
+@app.post("/api/ai-results", status_code=201)
+async def upsert_ai_result(body: AIResultUpsert):
+    now = datetime.now(timezone.utc).isoformat()
+    db = await get_db()
+    try:
+        # 按 module_type 唯一，存在则更新
+        cursor = await db.execute("SELECT id FROM ai_results WHERE module_type = ?", (body.moduleType,))
+        existing = await cursor.fetchone()
+
+        if existing:
+            await db.execute(
+                "UPDATE ai_results SET content_json = ?, source_experience_ids = ?, updated_at = ? WHERE module_type = ?",
+                (json.dumps(body.content), json.dumps(body.sourceExperienceIds), now, body.moduleType),
+            )
+        else:
+            await db.execute(
+                "INSERT INTO ai_results (id, module_type, content_json, source_experience_ids, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
+                (str(uuid4()), body.moduleType, json.dumps(body.content), json.dumps(body.sourceExperienceIds), now, now),
+            )
+
+        await db.commit()
+        return {"ok": True, "moduleType": body.moduleType, "updatedAt": now}
+    finally:
+        await db.close()
+
+
+# ---- LLM Status ----
+
+@app.get("/api/llm/status")
+async def llm_status():
+    return {"configured": llm_service.is_configured()}
 
 
 if __name__ == "__main__":

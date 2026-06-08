@@ -40,6 +40,11 @@ const router = createRouter({
       component: () => import('../views/ResumePreviewView.vue'),
     },
     {
+      path: '/resume/ai-generate',
+      name: 'ai-generate',
+      component: () => import('../views/AIGenerateView.vue'),
+    },
+    {
       path: '/warehouse',
       name: 'warehouse',
       component: () => import('../views/BrainMapView.vue'),

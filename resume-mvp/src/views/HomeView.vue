@@ -1,8 +1,20 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import FunctionCard from '../components/home/FunctionCard.vue'
 
 const router = useRouter()
+const llmConfigured = ref(false)
+
+onMounted(async () => {
+  try {
+    const res = await fetch('http://localhost:8000/api/llm/status')
+    const data = await res.json()
+    llmConfigured.value = data.configured
+  } catch {
+    llmConfigured.value = false
+  }
+})
 </script>
 
 <template>
@@ -35,6 +47,15 @@ const router = useRouter()
           description="从背包中挑选记忆碎片，选择你喜欢的模板样式，系统自动匹配目标岗位，生成一份量身定制的简历。"
           variant="b"
           @click="router.push('/resume')"
+        />
+        <FunctionCard
+          v-if="llmConfigured"
+          badge="流程 C"
+          icon="✨"
+          title="AI 智能生成"
+          description="上传已有简历，结合 QA 对话数据，由 AI 自动生成实习经历、自我评价等模块，润色优化后一键导出。"
+          variant="b"
+          @click="router.push('/resume/ai-generate')"
         />
       </div>
     </div>
